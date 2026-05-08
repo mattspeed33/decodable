@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(shopt -s dotglob)",
+      "Bash(mv temp-vite/* .)",
+      "Bash(rmdir temp-vite:*)",
+      "Bash(npx vite:*)"
+    ]
+  }
+}
