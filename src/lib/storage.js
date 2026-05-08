@@ -50,6 +50,25 @@ export function saveAssessment(assessment) {
   localStorage.setItem('decodable_assessments', JSON.stringify(all))
 }
 
+// ── SCHEDULED SESSIONS ────────────────────────────────
+export function getScheduledSessions(studentId = null) {
+  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]')
+  const filtered = studentId ? all.filter(s => s.student_id === studentId) : all
+  return filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
+}
+
+export function saveScheduledSession(scheduled) {
+  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]')
+  const index = all.findIndex(s => s.id === scheduled.id)
+  if (index >= 0) { all[index] = scheduled } else { all.push(scheduled) }
+  localStorage.setItem('decodable_scheduled_sessions', JSON.stringify(all))
+}
+
+export function deleteScheduledSession(id) {
+  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]').filter(s => s.id !== id)
+  localStorage.setItem('decodable_scheduled_sessions', JSON.stringify(all))
+}
+
 // ── SESSIONS ──────────────────────────────────────────
 export function getAllSessions() {
   return JSON.parse(localStorage.getItem('decodable_sessions') || '[]')

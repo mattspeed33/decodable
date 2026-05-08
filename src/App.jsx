@@ -11,6 +11,8 @@ import Settings from './screens/Settings.jsx'
 import AssessmentTemplates from './screens/AssessmentTemplates.jsx'
 import AssessmentTemplateDetail from './screens/AssessmentTemplateDetail.jsx'
 import HomeworkInbox from './screens/HomeworkInbox.jsx'
+import CalendarPage from './screens/CalendarPage.jsx'
+import ReportCard from './screens/ReportCard.jsx'
 
 export default function App() {
   return (
@@ -24,8 +26,10 @@ export default function App() {
             <Route path="/students/new" element={<NewStudent />} />
             <Route path="/students/:id" element={<StudentPage />} />
             <Route path="/students/:id/analysis" element={<AnalysisResult />} />
+            <Route path="/students/:id/report" element={<ReportCard />} />
             <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
             <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/templates" element={<AssessmentTemplates />} />
             <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
             <Route path="/homework" element={<HomeworkInbox />} />

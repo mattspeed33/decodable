@@ -1,25 +1,34 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { fetchCategoryTemplate, getTemplateFileUrl, uploadCategoryTemplate } from '../lib/skillsApi'
 import { getCategoryById, getDefaultPdfPath } from '../lib/skillsCategories'
+
+const STORAGE_KEY = 'decodable_custom_templates'
+
+function getCustomTemplates() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+}
+
+function saveCustomTemplate(categoryId, data) {
+  const all = getCustomTemplates()
+  all[categoryId] = data
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
+}
+
+function removeCustomTemplate(categoryId) {
+  const all = getCustomTemplates()
+  delete all[categoryId]
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
+}
 
 export default function AssessmentTemplateDetail() {
   const { categoryId } = useParams()
   const category = getCategoryById(categoryId)
-  const [customTemplate, setCustomTemplate] = useState(null)
+  const [custom, setCustom] = useState(null)
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!categoryId) return
-    fetchCategoryTemplate(categoryId)
-      .then((data) => {
-        setCustomTemplate(data.customTemplate || null)
-        setError('')
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load template details.')
-      })
+    const stored = getCustomTemplates()[categoryId]
+    if (stored) setCustom(stored)
   }, [categoryId])
 
   if (!category) {
@@ -27,72 +36,91 @@ export default function AssessmentTemplateDetail() {
   }
 
   const defaultPdfPath = getDefaultPdfPath(category.id)
-  const customTemplateUrl = customTemplate ? getTemplateFileUrl(customTemplate.filePath) : null
 
-  async function handleUpload(event) {
-    const file = event.target.files?.[0]
+  function handleUpload(e) {
+    const file = e.target.files?.[0]
     if (!file) return
-    try {
-      setUploading(true)
-      setError('')
-      const data = await uploadCategoryTemplate(category.id, file)
-      setCustomTemplate(data.customTemplate || null)
-    } catch (err) {
-      setError(err.message || 'Upload failed.')
-    } finally {
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const data = { name: file.name, dataUrl: ev.target.result, uploadedAt: new Date().toISOString() }
+      saveCustomTemplate(categoryId, data)
+      setCustom(data)
       setUploading(false)
-      event.target.value = ''
     }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  function handleRemove() {
+    removeCustomTemplate(categoryId)
+    setCustom(null)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-black text-black tracking-tight">{category.label}</h2>
-        <span className="text-xs bg-pink-100 text-pink-700 px-3 py-1 rounded-full font-bold">
-          {customTemplate ? 'Custom uploaded' : 'Default only'}
+        <span className={`text-xs px-3 py-1 rounded-full font-bold ${custom ? 'bg-[var(--green-light)] text-[var(--green)]' : 'bg-gray-100 text-gray-500'}`}>
+          {custom ? 'Custom uploaded' : 'Default only'}
         </span>
       </div>
 
-      <div className="template-sheet rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-        <p className="text-sm text-gray-700">
-          Open a default PDF template, or upload your own PDF file for this skill category.
-        </p>
-        {customTemplate && (
-          <p className="text-xs text-gray-500">
-            Current custom file: <span className="font-semibold text-black">{customTemplate.originalName}</span>
-          </p>
-        )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+      {/* PDF Preview */}
+      <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
+        <iframe
+          src={custom ? custom.dataUrl : defaultPdfPath}
+          className="w-full h-[600px]"
+          title={`${category.label} PDF`}
+        />
       </div>
 
-      <div className="action-buttons non-print space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a href={defaultPdfPath} target="_blank" rel="noreferrer" className="text-center bg-[var(--primary)] text-white py-3 rounded-full font-semibold hover:bg-[var(--primary-hover)] transition">
-            Open Default PDF
-          </a>
-          <a href={defaultPdfPath} download className="text-center bg-white border border-gray-200 py-3 rounded-full font-semibold text-black hover:border-black transition">
-            Download Default PDF
-          </a>
-        </div>
-        {customTemplateUrl && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <a href={customTemplateUrl} target="_blank" rel="noreferrer" className="text-center bg-[var(--green)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition">
-              Open Custom PDF
-            </a>
-            <a href={customTemplateUrl} download className="text-center bg-white border border-gray-200 py-3 rounded-full font-semibold text-black hover:border-black transition">
-              Download Custom PDF
-            </a>
+      {/* Actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <a
+          href={custom ? custom.dataUrl : defaultPdfPath}
+          target="_blank"
+          rel="noreferrer"
+          className="text-center bg-[var(--primary)] text-white py-3 rounded-full font-bold hover:bg-[var(--primary-hover)] transition"
+        >
+          📄 Open {custom ? 'Custom' : 'Default'} PDF
+        </a>
+        <a
+          href={custom ? custom.dataUrl : defaultPdfPath}
+          download={custom ? custom.name : `${category.id}.pdf`}
+          className="text-center bg-white border-2 border-gray-100 py-3 rounded-full font-bold text-black hover:border-[var(--primary)] transition"
+        >
+          📥 Download PDF
+        </a>
+      </div>
+
+      {/* Custom upload */}
+      <div className="bg-white rounded-2xl border-2 border-gray-100 p-5 space-y-3">
+        <h3 className="font-black text-black text-sm">📤 Upload Custom Template</h3>
+        <p className="text-xs text-gray-500">Replace the default with your own PDF for this assessment category.</p>
+
+        {custom && (
+          <div className="flex items-center justify-between bg-[var(--green-light)] rounded-xl p-3">
+            <div>
+              <p className="text-xs font-bold text-[var(--green)]">Custom template active</p>
+              <p className="text-[10px] text-gray-500">{custom.name} &middot; {new Date(custom.uploadedAt).toLocaleDateString()}</p>
+            </div>
+            <button onClick={handleRemove} className="text-[10px] font-bold text-[var(--red)] hover:underline">Remove</button>
           </div>
         )}
+
+        <div className="flex gap-3 items-center">
+          <label className="flex-1 bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-[var(--primary)] transition">
+            <p className="text-xs font-bold text-gray-500">{uploading ? 'Uploading...' : 'Click to upload PDF'}</p>
+            <input type="file" accept="application/pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+          </label>
+        </div>
       </div>
 
-      <div className="non-print rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-        <h3 className="font-bold text-black">Upload Custom PDF</h3>
-        <p className="text-sm text-gray-600">Upload your own printable template for this category. This file will be saved on the backend.</p>
-        <input type="file" accept="application/pdf" onChange={handleUpload} disabled={uploading} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
-        <p className="text-xs text-gray-500">{uploading ? 'Uploading...' : 'PDF files only.'}</p>
-      </div>
+      {/* Print button */}
+      <button onClick={() => window.print()} className="w-full bg-white border-2 border-gray-100 py-3 rounded-full font-bold text-black hover:border-[var(--primary)] transition">
+        🖨️ Print
+      </button>
     </div>
   )
 }

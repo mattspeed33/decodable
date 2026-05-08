@@ -12,6 +12,8 @@ export default function NewStudent() {
     session_length_minutes: 50,
     total_sessions_planned: 4,
     start_date: new Date().toISOString().split('T')[0],
+    session_day: '',
+    session_time: '',
     parent_name: '',
     parent_email: '',
     tutor_name: '',
@@ -90,17 +92,33 @@ export default function NewStudent() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Total Sessions</label>
+            <label className={labelClass}>Engagement Length</label>
             <select className={inputClass} value={form.total_sessions_planned} onChange={e => update('total_sessions_planned', e.target.value)}>
-              <option value="4">4</option>
-              <option value="8">8</option>
-              <option value="12">12</option>
+              <option value="4">4 weeks</option>
+              <option value="8">8 weeks</option>
+              <option value="12">12 weeks</option>
               <option value="ongoing">Ongoing</option>
             </select>
           </div>
           <div>
             <label className={labelClass}>Start Date</label>
             <input className={inputClass} type="date" value={form.start_date} onChange={e => update('start_date', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Session Day</label>
+            <select className={inputClass} value={form.session_day} onChange={e => update('session_day', e.target.value)}>
+              <option value="">Select day...</option>
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Session Time</label>
+            <input className={inputClass} type="time" value={form.session_time} onChange={e => update('session_time', e.target.value)} />
           </div>
         </div>
 

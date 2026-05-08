@@ -78,12 +78,12 @@ export default function StudentProfile({ studentId, onNavigateTab }) {
         </div>
       )}
 
-      {/* 4-Week Arc */}
-      {analysis?.four_week_arc && (
+      {/* Week Arc */}
+      {(analysis?.week_arc || analysis?.four_week_arc) && (
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-5">
-          <h3 className="font-black text-black mb-3">📅 4-Week Arc</h3>
+          <h3 className="font-black text-black mb-3">📅 {(analysis.week_arc || analysis.four_week_arc).length}-Week Plan</h3>
           <ul className="space-y-2">
-            {analysis.four_week_arc.map((week, i) => (
+            {(analysis.week_arc || analysis.four_week_arc).map((week, i) => (
               <li key={i} className="text-sm flex gap-2 items-start">
                 <span className="bg-[var(--primary-light)] text-[var(--primary)] text-xs font-black w-7 h-7 rounded-lg flex items-center justify-center shrink-0">{week.week}</span>
                 <span><span className="font-bold text-black">{week.focus}</span> <span className="text-gray-400">— {week.activity_type}</span></span>

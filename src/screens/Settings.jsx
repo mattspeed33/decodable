@@ -10,6 +10,7 @@ const ALL_STORAGE_KEYS = [
   'decodable_assessment_templates',
   'decodable_template_assignments',
   'decodable_homework_sheets',
+  'decodable_scheduled_sessions',
 ]
 
 function getSettings() {

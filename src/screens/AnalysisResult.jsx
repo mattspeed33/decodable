@@ -133,7 +133,7 @@ export default function AnalysisResult() {
       <div className="bg-white rounded-2xl border-2 border-gray-100 p-5">
         <h3 className="text-sm font-black text-black mb-3">📅 4-Week Plan</h3>
         <ul className="space-y-2">
-          {a.four_week_arc.map((week, i) => (
+          {(a.week_arc || a.four_week_arc).map((week, i) => (
             <li key={i} className="text-sm flex gap-2.5 items-start">
               <span className="bg-[var(--primary-light)] text-[var(--primary)] text-xs font-black w-7 h-7 rounded-lg flex items-center justify-center shrink-0">{week.week}</span>
               <span><span className="font-bold text-black">{week.focus}</span> <span className="text-gray-400">— {week.activity_type}</span></span>
