@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #a78bfa;
+  --primary-hover: #8b6fdd;
+  --primary-light: #ede9fe;
+  --green: #58cc02;
+  --green-light: #d7ffb8;
+  --orange: #ff9600;
+  --orange-light: #fff3e0;
+  --red: #ff4b4b;
+  --red-light: #ffe0e0;
+  --blue: #1cb0f6;
+  --blue-light: #ddf4ff;
+  --gold: #ffc800;
+  --gold-light: #fff8e1;
+  --bg: #f7f7f5;
+  --card: #ffffff;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+}
+
+@media print {
+  .navbar,
+  .action-buttons,
+  .tutor-note-private,
+  .screen-nav,
+  .sidebar,
+  .non-print {
+    display: none !important;
+  }
+
+  .homework-sheet {
+    font-size: 14pt;
+    line-height: 1.8;
+    max-width: 100%;
+  }
+
+  .template-sheet {
+    font-size: 12pt;
+    line-height: 1.6;
+    max-width: 100%;
+  }
+
+  .print-page-break {
+    page-break-before: always;
+  }
+}
