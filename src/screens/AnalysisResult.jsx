@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { saveAssessment, getStudent } from '../lib/storage'
+import { saveAnalysis, getStudent } from '../lib/storage'
 
 export default function AnalysisResult() {
   const { id } = useParams()
@@ -28,12 +28,15 @@ export default function AnalysisResult() {
   const a = data.ai_analysis
 
   function handleSave() {
-    const assessment = {
-      ...data,
+    const analysis = {
       id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
+      student_id: data.student_id,
+      date: data.date,
+      assessment_ids: data.assessment_ids || [],
+      ai_analysis: data.ai_analysis,
+      created_at: new Date().toISOString(),
     }
-    saveAssessment(assessment)
+    saveAnalysis(analysis)
     sessionStorage.removeItem('decodable_pending_analysis')
     navigate(`/students/${id}`)
   }

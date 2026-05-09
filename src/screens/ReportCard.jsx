@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { getStudent, getAssessments, getSessions } from '../lib/storage'
+import { getStudent, getAnalyses, getSessions } from '../lib/storage'
 import { runPrompt } from '../lib/claude'
 import { reportPrompt } from '../prompts/reportPrompt'
 import LoadingState from '../components/LoadingState.jsx'
@@ -34,14 +34,14 @@ function getSettings() {
 export default function ReportCard() {
   const { id } = useParams()
   const student = getStudent(id)
-  const assessments = getAssessments(id)
+  const analyses = getAnalyses(id)
   const sessions = getSessions(id)
   const settings = getSettings()
 
-  const firstAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null
-  const latestAssessment = assessments.length > 0 ? assessments[0] : null
-  const firstA = firstAssessment?.ai_analysis
-  const latestA = latestAssessment?.ai_analysis
+  const firstAnalysis = analyses.length > 0 ? analyses[analyses.length - 1] : null
+  const latestAnalysis = analyses.length > 0 ? analyses[0] : null
+  const firstA = firstAnalysis?.ai_analysis
+  const latestA = latestAnalysis?.ai_analysis
 
   const [skills, setSkills] = useState(DEFAULT_SKILLS)
   const [strengths, setStrengths] = useState(['', '', ''])

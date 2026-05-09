@@ -190,6 +190,70 @@ export function saveHomeworkSheet(sheet) {
   localStorage.setItem('decodable_homework_sheets', JSON.stringify(all))
 }
 
+// ── ANALYSES ─────────────────────────────────────────
+export function getAnalyses(studentId) {
+  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]')
+  return all
+    .filter(a => a.student_id === studentId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+}
+
+export function getLatestAnalysis(studentId) {
+  const analyses = getAnalyses(studentId)
+  if (analyses.length > 0) return analyses[0]
+  // Fallback: check legacy assessment records with ai_analysis baked in
+  const assessment = getLatestAssessment(studentId)
+  if (assessment?.ai_analysis) {
+    return { id: assessment.id, student_id: studentId, date: assessment.date, assessment_ids: [assessment.id], ai_analysis: assessment.ai_analysis }
+  }
+  return null
+}
+
+export function saveAnalysis(analysis) {
+  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]')
+  const index = all.findIndex(a => a.id === analysis.id)
+  if (index >= 0) {
+    all[index] = analysis
+  } else {
+    all.push(analysis)
+  }
+  localStorage.setItem('decodable_analyses', JSON.stringify(all))
+}
+
+export function deleteAnalysis(id) {
+  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]').filter(a => a.id !== id)
+  localStorage.setItem('decodable_analyses', JSON.stringify(all))
+}
+
+export function deleteAssessment(id) {
+  const all = JSON.parse(localStorage.getItem('decodable_assessments') || '[]').filter(a => a.id !== id)
+  localStorage.setItem('decodable_assessments', JSON.stringify(all))
+}
+
+// ── REPORT CARDS ─────────────────────────────────────
+export function getReportCards(studentId) {
+  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]')
+  return all
+    .filter(r => r.student_id === studentId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+}
+
+export function saveReportCard(report) {
+  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]')
+  const index = all.findIndex(r => r.id === report.id)
+  if (index >= 0) {
+    all[index] = report
+  } else {
+    all.push(report)
+  }
+  localStorage.setItem('decodable_report_cards', JSON.stringify(all))
+}
+
+export function deleteReportCard(id) {
+  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]').filter(r => r.id !== id)
+  localStorage.setItem('decodable_report_cards', JSON.stringify(all))
+}
+
 // ── PROGRESS ──────────────────────────────────────────
 export function getProgress(studentId) {
   const student = getStudent(studentId)
@@ -204,7 +268,8 @@ export function getProgress(studentId) {
   }
 
   const target = gradeTargets[student?.grade] || gradeTargets['1st']
-  const latest = assessments[0]
+  const analyses = getAnalyses(studentId)
+  const latestAn = analyses[0]
 
   return {
     student_id: studentId,
@@ -212,13 +277,11 @@ export function getProgress(studentId) {
     sessions_completed: sessions.length,
     sessions_remaining:
       (student?.total_sessions_planned || 4) - sessions.length,
-    fluency_over_time: assessments.map(a => ({
-      session: a.session_number,
+    fluency_over_time: analyses.map(a => ({
       date: a.date,
       fluency_pct: a.ai_analysis?.fluency_estimate_pct || 0
     })).reverse(),
-    ufli_units_over_time: assessments.map(a => ({
-      session: a.session_number,
+    ufli_units_over_time: analyses.map(a => ({
       date: a.date,
       working_unit: a.ai_analysis?.ufli_placement?.current_working_unit || 0
     })).reverse(),
@@ -226,15 +289,15 @@ export function getProgress(studentId) {
       grade: student?.grade,
       expected_fluency_pct: target.fluency_pct,
       expected_ufli_unit: target.ufli_unit,
-      current_fluency_pct: latest?.ai_analysis?.fluency_estimate_pct || 0,
+      current_fluency_pct: latestAn?.ai_analysis?.fluency_estimate_pct || 0,
       current_ufli_unit:
-        latest?.ai_analysis?.ufli_placement?.current_working_unit || 0,
+        latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0,
       fluency_gap: target.fluency_pct -
-        (latest?.ai_analysis?.fluency_estimate_pct || 0),
+        (latestAn?.ai_analysis?.fluency_estimate_pct || 0),
       unit_gap: target.ufli_unit -
-        (latest?.ai_analysis?.ufli_placement?.current_working_unit || 0)
+        (latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0)
     },
     flags_still_active:
-      latest?.ai_analysis?.patterns_to_watch || []
+      latestAn?.ai_analysis?.patterns_to_watch || []
   }
 }

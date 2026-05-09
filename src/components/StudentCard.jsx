@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { getLatestAssessment, getSessions } from '../lib/storage'
+import { getLatestAnalysis, getSessions } from '../lib/storage'
 import ProgressBar from './ProgressBar.jsx'
 
 const gradeTargets = {
@@ -12,12 +12,12 @@ const gradeEmoji = {
 
 export default function StudentCard({ student }) {
   const navigate = useNavigate()
-  const assessment = getLatestAssessment(student.id)
+  const analysis = getLatestAnalysis(student.id)
   const sessions = getSessions(student.id)
   const sessionsCompleted = sessions.length
   const sessionsRemaining = (student.total_sessions_planned || 4) - sessionsCompleted
-  const fluency = assessment?.ai_analysis?.fluency_estimate_pct || 0
-  const ufliUnit = assessment?.ai_analysis?.ufli_placement?.current_working_unit
+  const fluency = analysis?.ai_analysis?.fluency_estimate_pct || 0
+  const ufliUnit = analysis?.ai_analysis?.ufli_placement?.current_working_unit
   const target = gradeTargets[student.grade] || 75
 
   return (

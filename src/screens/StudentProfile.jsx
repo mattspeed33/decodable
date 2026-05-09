@@ -1,4 +1,4 @@
-import { getStudent, getLatestAssessment, getSessions, getProgress } from '../lib/storage'
+import { getStudent, getLatestAnalysis, getSessions, getProgress } from '../lib/storage'
 import ProgressBar from '../components/ProgressBar.jsx'
 
 const gradeTargets = {
@@ -11,13 +11,13 @@ const gradeEmoji = {
 
 export default function StudentProfile({ studentId, onNavigateTab }) {
   const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
+  const latestAnalysis = getLatestAnalysis(studentId)
   const sessions = getSessions(studentId)
   const progress = getProgress(studentId)
 
   if (!student) return null
 
-  const analysis = assessment?.ai_analysis
+  const analysis = latestAnalysis?.ai_analysis
   const fluency = analysis?.fluency_estimate_pct || 0
   const target = gradeTargets[student.grade] || 75
   const ufli = analysis?.ufli_placement

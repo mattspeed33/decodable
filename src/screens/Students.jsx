@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getLatestAssessment, getAllSessions } from '../lib/storage'
+import { getStudents, getLatestAnalysis, getAllSessions } from '../lib/storage'
 
 const gradeEmoji = { 'K': '🌱', '1st': '🌿', '2nd': '🌳', '3rd': '🏆' }
 
@@ -29,7 +29,7 @@ export default function Students() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {students.map(s => {
-            const a = getLatestAssessment(s.id)
+            const a = getLatestAnalysis(s.id)
             const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
             const ufli = a?.ai_analysis?.ufli_placement
             const sessCount = allSessions.filter(ses => ses.student_id === s.id).length

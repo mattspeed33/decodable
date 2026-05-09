@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getStudent, saveStudent, getLatestAssessment, saveAssessment } from '../../lib/storage'
+import { getStudent, saveStudent, getLatestAnalysis, saveAnalysis } from '../../lib/storage'
 import { runPrompt } from '../../lib/claude'
 import LoadingState from '../../components/LoadingState.jsx'
 
@@ -45,12 +45,12 @@ export default function ProfileTab({ studentId, onRefresh }) {
 
     // If engagement length changed and we have an assessment, regenerate the arc
     if (engagementChanged) {
-      const assessment = getLatestAssessment(studentId)
-      if (assessment?.ai_analysis) {
+      const analysisRecord = getLatestAnalysis(studentId)
+      if (analysisRecord?.ai_analysis) {
         const newWeeks = newEngagement === 999 ? 4 : newEngagement
         setRegenerating(true)
         try {
-          const a = assessment.ai_analysis
+          const a = analysisRecord.ai_analysis
           const context = `
 STUDENT: ${form.name}, ${form.grade} grade
 NEW ENGAGEMENT LENGTH: ${newWeeks} weeks
@@ -64,16 +64,16 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           const result = await runPrompt({ systemPrompt: arcRegeneratePrompt, userMessage: context })
           const newArc = JSON.parse(result)
 
-          // Update the assessment with new arc
-          const updatedAssessment = {
-            ...assessment,
+          // Update the analysis with new arc
+          const updatedAnalysis = {
+            ...analysisRecord,
             ai_analysis: {
-              ...assessment.ai_analysis,
+              ...analysisRecord.ai_analysis,
               week_arc: newArc,
-              four_week_arc: undefined // clear old field
+              four_week_arc: undefined
             }
           }
-          saveAssessment(updatedAssessment)
+          saveAnalysis(updatedAnalysis)
         } catch (err) {
           console.error('Failed to regenerate arc:', err)
         } finally {

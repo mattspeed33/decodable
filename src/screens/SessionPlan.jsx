@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getStudent, getLatestAssessment, getLatestSession, getSessions, getAssessments, saveSession } from '../lib/storage'
+import { getStudent, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession } from '../lib/storage'
 import { runPrompt } from '../lib/claude'
 import { sessionPrompt } from '../prompts/sessionPrompt'
 import { bundleForSessionPlan } from '../lib/dataHelpers'
@@ -29,7 +29,7 @@ export default function SessionPlan({ studentId }) {
   const id = studentId || params.id
   const navigate = useNavigate()
   const student = getStudent(id)
-  const assessment = getLatestAssessment(id)
+  const analysis = getLatestAnalysis(id)
   const lastSession = getLatestSession(id)
   const allSessions = getSessions(id)
   const allAssessments = getAssessments(id)
@@ -209,7 +209,7 @@ export default function SessionPlan({ studentId }) {
             {allSessions.map(session => {
               const isExpanded = expandedSession === session.id
               const sessionAssessment = getAssessmentForSession(session)
-              const analysis = sessionAssessment?.ai_analysis
+              const sessionAnalysis = sessionAssessment?.ai_analysis || getLatestAnalysis(id)?.ai_analysis
 
               return (
                 <div key={session.id} className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden transition-all">
@@ -270,34 +270,34 @@ export default function SessionPlan({ studentId }) {
                       )}
 
                       {/* Assessment snapshot if linked */}
-                      {analysis && (
+                      {sessionAnalysis && (
                         <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">📊 Assessment Snapshot</p>
                           <div className="flex flex-wrap gap-2">
-                            <span className="text-xs bg-[var(--blue-light)] text-[var(--blue)] px-2.5 py-0.5 rounded-full font-bold">📖 {analysis.passage_level_reached}</span>
+                            <span className="text-xs bg-[var(--blue-light)] text-[var(--blue)] px-2.5 py-0.5 rounded-full font-bold">📖 {sessionAnalysis.passage_level_reached}</span>
                             <span className="text-xs px-2.5 py-0.5 rounded-full font-bold" style={{
-                              background: analysis.fluency_estimate_pct >= 80 ? 'var(--green-light)' : analysis.fluency_estimate_pct >= 50 ? 'var(--orange-light)' : 'var(--red-light)',
-                              color: analysis.fluency_estimate_pct >= 80 ? 'var(--green)' : analysis.fluency_estimate_pct >= 50 ? 'var(--orange)' : 'var(--red)'
-                            }}>🎯 {analysis.fluency_estimate_pct}% fluency</span>
-                            {analysis.ufli_placement && (
-                              <span className="text-xs bg-[var(--primary-light)] text-[var(--primary)] px-2.5 py-0.5 rounded-full font-bold">📘 Unit {analysis.ufli_placement.current_working_unit}</span>
+                              background: sessionAnalysis.fluency_estimate_pct >= 80 ? 'var(--green-light)' : sessionAnalysis.fluency_estimate_pct >= 50 ? 'var(--orange-light)' : 'var(--red-light)',
+                              color: sessionAnalysis.fluency_estimate_pct >= 80 ? 'var(--green)' : sessionAnalysis.fluency_estimate_pct >= 50 ? 'var(--orange)' : 'var(--red)'
+                            }}>🎯 {sessionAnalysis.fluency_estimate_pct}% fluency</span>
+                            {sessionAnalysis.ufli_placement && (
+                              <span className="text-xs bg-[var(--primary-light)] text-[var(--primary)] px-2.5 py-0.5 rounded-full font-bold">📘 Unit {sessionAnalysis.ufli_placement.current_working_unit}</span>
                             )}
                           </div>
-                          {analysis.strengths?.length > 0 && (
+                          {sessionAnalysis.strengths?.length > 0 && (
                             <div className="mt-2">
                               <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Strengths</p>
                               <ul className="space-y-0.5">
-                                {analysis.strengths.map((s, i) => (
+                                {sessionAnalysis.strengths.map((s, i) => (
                                   <li key={i} className="text-xs text-gray-600 flex gap-1.5"><span className="text-[var(--green)]">✓</span>{s}</li>
                                 ))}
                               </ul>
                             </div>
                           )}
-                          {analysis.priority_gaps?.length > 0 && (
+                          {sessionAnalysis.priority_gaps?.length > 0 && (
                             <div className="mt-2">
                               <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Focus Areas</p>
                               <ul className="space-y-0.5">
-                                {analysis.priority_gaps.map((g, i) => (
+                                {sessionAnalysis.priority_gaps.map((g, i) => (
                                   <li key={i} className="text-xs text-gray-600 flex gap-1.5"><span className="text-[var(--red)]">●</span><span className="font-semibold">{g.gap}</span></li>
                                 ))}
                               </ul>
@@ -307,7 +307,7 @@ export default function SessionPlan({ studentId }) {
                       )}
 
                       {/* Empty state if no notes at all */}
-                      {!session.tutor_notes && !session.what_went_well && !session.what_needs_more_work && !analysis && (
+                      {!session.tutor_notes && !session.what_went_well && !session.what_needs_more_work && !sessionAnalysis && (
                         <p className="text-sm text-gray-400 text-center py-4">No notes recorded for this session.</p>
                       )}
                     </div>

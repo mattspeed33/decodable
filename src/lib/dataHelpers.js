@@ -1,14 +1,15 @@
 import {
   getStudent,
-  getLatestAssessment,
+  getLatestAnalysis,
   getLatestSession,
   getLatestEmailSummary
 } from './storage'
 
 export function bundleForSessionPlan(studentId, sessionLength, lastNotes) {
   const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
+  const analysis = getLatestAnalysis(studentId)
   const lastSession = getLatestSession(studentId)
+  const a = analysis?.ai_analysis
 
   return `
 STUDENT: ${student.name}, ${student.grade} grade, age ${student.age}
@@ -18,17 +19,17 @@ SESSIONS COMPLETED: ${lastSession?.session_number || 0} of ${student.total_sessi
 TUTOR NAME: ${student.tutor_name}
 
 CURRENT UFLI PLACEMENT:
-Last unit mastered: Unit ${assessment.ai_analysis.ufli_placement.last_unit_mastered} — ${assessment.ai_analysis.ufli_placement.last_unit_name}
-Working unit: Unit ${assessment.ai_analysis.ufli_placement.current_working_unit} — ${assessment.ai_analysis.ufli_placement.current_unit_name}
-Next unlock: Unit ${assessment.ai_analysis.ufli_placement.next_unlock_unit} — ${assessment.ai_analysis.ufli_placement.next_unlock_name}
+Last unit mastered: Unit ${a?.ufli_placement?.last_unit_mastered || '?'} — ${a?.ufli_placement?.last_unit_name || '?'}
+Working unit: Unit ${a?.ufli_placement?.current_working_unit || '?'} — ${a?.ufli_placement?.current_unit_name || '?'}
+Next unlock: Unit ${a?.ufli_placement?.next_unlock_unit || '?'} — ${a?.ufli_placement?.next_unlock_name || '?'}
 
 PRIORITY GAPS:
-${assessment.ai_analysis.priority_gaps.map(g =>
+${a?.priority_gaps?.map(g =>
   `${g.rank}. ${g.gap} — ${g.why_it_matters}`
-).join('\n')}
+).join('\n') || 'Not yet analyzed'}
 
 PATTERNS TO WATCH:
-${assessment.ai_analysis.patterns_to_watch.join('\n')}
+${a?.patterns_to_watch?.join('\n') || 'Not yet analyzed'}
 
 NOTES FROM LAST SESSION:
 ${lastNotes || lastSession?.tutor_notes || 'No previous session notes — this is session 1.'}
@@ -37,15 +38,16 @@ ${lastNotes || lastSession?.tutor_notes || 'No previous session notes — this i
 
 export function bundleForEmail(studentId, sessionNotes) {
   const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
+  const analysis = getLatestAnalysis(studentId)
   const lastSession = getLatestSession(studentId)
   const lastEmailSummary = getLatestEmailSummary(studentId)
+  const a = analysis?.ai_analysis
 
   return `
 STUDENT: ${student.name}, ${student.grade} grade
 PARENT NAME: ${student.parent_name}
 TUTOR NAME: ${student.tutor_name}
-CURRENT UFLI UNIT: Unit ${assessment.ai_analysis.ufli_placement.current_working_unit} — ${assessment.ai_analysis.ufli_placement.current_unit_name}
+CURRENT UFLI UNIT: Unit ${a?.ufli_placement?.current_working_unit || '?'} — ${a?.ufli_placement?.current_unit_name || '?'}
 
 WHAT WAS WORKED ON THIS SESSION:
 ${sessionNotes || lastSession?.tutor_notes || 'General literacy session'}
@@ -63,21 +65,22 @@ ${lastEmailSummary || 'This is the first parent email for this student.'}
 
 export function bundleForHomework(studentId) {
   const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
+  const analysis = getLatestAnalysis(studentId)
+  const a = analysis?.ai_analysis
 
   return `
 STUDENT NAME: ${student.name}
 GRADE: ${student.grade}
 AGE: ${student.age}
 TUTOR NAME: ${student.tutor_name}
-CURRENT UFLI UNIT: Unit ${assessment.ai_analysis.ufli_placement.current_working_unit} — ${assessment.ai_analysis.ufli_placement.current_unit_name}
+CURRENT UFLI UNIT: Unit ${a?.ufli_placement?.current_working_unit || '?'} — ${a?.ufli_placement?.current_unit_name || '?'}
 
 SPECIFIC PATTERN GAPS TO ADDRESS:
-${assessment.ai_analysis.priority_gaps.map(g =>
+${a?.priority_gaps?.map(g =>
   `• ${g.gap}`
-).join('\n')}
+).join('\n') || 'Not yet analyzed'}
 
 PATTERNS TO WATCH:
-${assessment.ai_analysis.patterns_to_watch.join('\n')}
+${a?.patterns_to_watch?.join('\n') || 'Not yet analyzed'}
   `.trim()
 }

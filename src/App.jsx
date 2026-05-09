@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { runMigration } from './lib/migration'
+
+runMigration()
 import NavBar from './components/NavBar.jsx'
 import Dashboard from './screens/Dashboard.jsx'
 import Students from './screens/Students.jsx'

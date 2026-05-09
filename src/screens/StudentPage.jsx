@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getStudent, getLatestAssessment, getLatestSession, getSessions, getAssessments, getEmailLog, getHomeworkSheets } from '../lib/storage'
+import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, getEmailLog, getHomeworkSheets } from '../lib/storage'
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
 import SessionsTab from './tabs/SessionsTab.jsx'
@@ -18,9 +18,12 @@ const tabs = [
 
 const gradeEmoji = { 'K': '🌱', '1st': '🌿', '2nd': '🌳', '3rd': '🏆' }
 
-function getNextAction(student, assessment, sessions, emails, homework) {
+function getNextAction(student, assessment, analysis, sessions, emails, homework) {
   if (!assessment) {
     return { icon: '📸', text: 'Upload your first assessment to get started', tab: 'assessments', color: 'var(--primary)' }
+  }
+  if (!analysis) {
+    return { icon: '🧠', text: 'Run your first analysis to get placement and recommendations', tab: 'assessments', color: 'var(--blue)' }
   }
   if (sessions.length === 0) {
     return { icon: '🗓️', text: 'Plan your first session', tab: 'sessions', color: 'var(--blue)' }
@@ -56,11 +59,12 @@ export default function StudentPage() {
   }
 
   const assessment = getLatestAssessment(id)
+  const latestAnalysis = getLatestAnalysis(id)
   const sessions = getSessions(id)
   const emails = getEmailLog(id)
   const homework = getHomeworkSheets(id)
-  const nextAction = getNextAction(student, assessment, sessions, emails, homework)
-  const analysis = assessment?.ai_analysis
+  const nextAction = getNextAction(student, assessment, latestAnalysis, sessions, emails, homework)
+  const analysis = latestAnalysis?.ai_analysis
   const weekArc = analysis?.week_arc || analysis?.four_week_arc
   const currentWeekIndex = Math.min(sessions.length, (weekArc?.length || 1) - 1)
   const currentWeek = weekArc?.[currentWeekIndex]

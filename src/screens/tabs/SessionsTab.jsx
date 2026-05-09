@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudent, getLatestAssessment, getLatestSession, getSessions, getAssessments, saveSession, saveAssessment } from '../../lib/storage'
+import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession, saveAnalysis } from '../../lib/storage'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { sessionPrompt } from '../../prompts/sessionPrompt'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
@@ -26,7 +26,8 @@ export default function SessionsTab({ studentId, onRefresh }) {
   const lastSession = getLatestSession(studentId)
   const allSessions = getSessions(studentId)
   const allAssessments = getAssessments(studentId)
-  const analysis = assessment?.ai_analysis
+  const latestAnalysis = getLatestAnalysis(studentId)
+  const analysis = latestAnalysis?.ai_analysis
 
   const [mode, setMode] = useState(null)
 
@@ -111,18 +112,16 @@ Previous sessions completed: ${allSessions.length}
         `.trim()
         const result = await runPrompt({ systemPrompt: getAnalysisPrompt(engagementWeeks), userMessage, images })
         const parsed = JSON.parse(result)
-        const newAssessment = {
+        const newAnalysis = {
           id: crypto.randomUUID(),
           student_id: studentId,
           date: logForm.date,
-          session_number: allSessions.length + 1,
-          photo_count: logPhotos.length,
-          assessment_types: [],
+          assessment_ids: [],
           ai_analysis: parsed,
           created_at: new Date().toISOString()
         }
-        saveAssessment(newAssessment)
-        assessmentId = newAssessment.id
+        saveAnalysis(newAnalysis)
+        assessmentId = newAnalysis.id
       }
 
       // Save session
@@ -419,6 +418,7 @@ Previous sessions completed: ${allSessions.length}
             {allSessions.map(session => {
               const isExpanded = expandedSession === session.id
               const sa = allAssessments.find(a => a.id === session.assessment_id)?.ai_analysis
+                || getLatestAnalysis(studentId)?.ai_analysis
               const hasNotes = session.tutor_notes || session.what_went_well || session.what_needs_more_work
               return (
                 <div key={session.id} className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">

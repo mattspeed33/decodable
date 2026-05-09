@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getAllSessions, getLatestAssessment } from '../lib/storage'
-
-const gradeTargets = { 'K': 60, '1st': 85, '2nd': 85, '3rd': 90 }
+import { getStudents, getAllSessions, getLatestAnalysis, getReportCards } from '../lib/storage'
+import { GRADE_LEVELS, GRADE_LEVEL_MAP, EXPECTED_LEVEL, getStatus, getLevelPercent } from '../lib/gradeLevels'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -16,20 +15,33 @@ export default function Dashboard() {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const sessionsThisWeek = allSessions.filter(s => new Date(s.date) >= sevenDaysAgo).length
 
-  // Average fluency across students
-  const fluencyData = students.map(s => {
-    const a = getLatestAssessment(s.id)
-    return a?.ai_analysis?.fluency_estimate_pct ?? null
-  }).filter(f => f !== null)
-  const avgFluency = fluencyData.length > 0 ? Math.round(fluencyData.reduce((a, b) => a + b, 0) / fluencyData.length) : null
+  // Per-student grade-level data from latest report card
+  const studentLevels = students.map(s => {
+    const reports = getReportCards(s.id)
+    const latest = reports[0]
+    if (!latest?.skillLevels) return { student: s, skills: null, statusCounts: null }
 
-  // Per-student fluency for chart
-  const studentFluency = students.map(s => {
-    const a = getLatestAssessment(s.id)
-    const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
-    const target = gradeTargets[s.grade] || 75
-    return { name: s.name, fluency, target, grade: s.grade }
+    const filled = Object.entries(latest.skillLevels).filter(([, v]) => v && v !== 'not-assessed')
+    const statusCounts = { ahead: 0, 'on-track': 0, behind: 0 }
+    let totalIdx = 0
+    let count = 0
+    for (const [, level] of filled) {
+      const st = getStatus(level, s.grade)
+      if (statusCounts[st.status] !== undefined) statusCounts[st.status]++
+      const idx = GRADE_LEVELS.findIndex(g => g.key === level)
+      if (idx >= 0) { totalIdx += idx; count++ }
+    }
+    const avgIdx = count > 0 ? Math.round(totalIdx / count) : -1
+    const avgLevel = avgIdx >= 0 ? GRADE_LEVELS[Math.min(avgIdx, GRADE_LEVELS.length - 1)] : null
+    const avgStatus = avgLevel ? getStatus(avgLevel.key, s.grade) : null
+
+    return { student: s, skills: latest.skillLevels, statusCounts, avgLevel, avgStatus, filledCount: filled.length }
   })
+
+  const studentsWithData = studentLevels.filter(s => s.skills)
+  const totalAhead = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.ahead || 0), 0)
+  const totalBehind = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.behind || 0), 0)
+  const totalOnTrack = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.['on-track'] || 0), 0)
 
   // Sessions per day (last 7 days) for bar chart
   const dailySessions = useMemo(() => {
@@ -78,7 +90,7 @@ export default function Dashboard() {
         <StatCard icon="👩‍🎓" value={totalStudents} label="Students" color="var(--primary)" />
         <StatCard icon="🗓️" value={sessionsThisWeek} label="Sessions (7d)" color="var(--blue)" />
         <StatCard icon="📚" value={allSessions.length} label="Total Sessions" color="var(--green)" />
-        <StatCard icon="🎯" value={avgFluency !== null ? `${avgFluency}%` : '—'} label="Avg Fluency" color={avgFluency >= 80 ? 'var(--green)' : avgFluency >= 50 ? 'var(--orange)' : 'var(--red)'} />
+        <StatCard icon="🟢" value={studentsWithData.length > 0 ? `${totalAhead}` : '—'} label="Skills Ahead" color="var(--green)" />
       </div>
 
       {/* ── SESSIONS THIS WEEK BAR CHART ── */}
@@ -99,46 +111,85 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── STUDENT FLUENCY CHART ── */}
-      {studentFluency.length > 0 && (
+      {/* ── STUDENT GRADE LEVEL OVERVIEW ── */}
+      {studentsWithData.length > 0 && (
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-          <h3 className="font-black text-black mb-4">🎯 Student Fluency vs. Benchmark</h3>
-          <div className="space-y-3">
-            {studentFluency.map((s, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-sm font-bold text-black w-20 truncate">{s.name}</span>
-                <div className="flex-1 relative">
-                  {/* Background bar (benchmark) */}
-                  <div className="w-full bg-gray-100 rounded-full h-5 overflow-hidden relative">
-                    {/* Fluency fill */}
-                    <div
-                      className="h-5 rounded-full transition-all relative"
-                      style={{
-                        width: `${Math.min(100, s.fluency)}%`,
-                        background: s.fluency >= s.target ? 'var(--green)' : s.fluency >= s.target * 0.7 ? 'var(--orange)' : 'var(--red)',
-                        minWidth: s.fluency > 0 ? '20px' : '0'
-                      }}
-                    >
-                      {s.fluency > 10 && (
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">{s.fluency}%</span>
+          <h3 className="font-black text-black mb-4">📊 Student Reading Levels</h3>
+          <div className="space-y-4">
+            {studentLevels.map((sl, i) => {
+              if (!sl.skills) return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-black w-20 truncate">{sl.student.name}</span>
+                  <span className="text-xs text-gray-400">No report card yet</span>
+                </div>
+              )
+
+              const expectedKey = EXPECTED_LEVEL[sl.student.grade]
+              const expectedPct = expectedKey ? getLevelPercent(expectedKey) : 0
+              const avgPct = sl.avgLevel ? getLevelPercent(sl.avgLevel.key) : 0
+
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-black truncate max-w-[100px]">{sl.student.name}</span>
+                      <span className="text-[10px] text-gray-400 font-semibold">{sl.student.grade}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {sl.avgLevel && (
+                        <span className="text-xs font-bold text-black">{sl.avgLevel.label}</span>
+                      )}
+                      {sl.avgStatus?.emoji && <span className="text-sm">{sl.avgStatus.emoji}</span>}
+                      <span className="text-[10px] font-bold" style={{ color: sl.avgStatus?.color || '#9ca3af' }}>
+                        {sl.avgStatus?.label || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Grade-level bar */}
+                  <div className="relative">
+                    <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                      {avgPct > 0 && (
+                        <div
+                          className="h-3 rounded-full transition-all"
+                          style={{ width: `${avgPct}%`, background: sl.avgStatus?.color || '#9ca3af' }}
+                        />
                       )}
                     </div>
-                    {/* Benchmark marker */}
-                    <div
-                      className="absolute top-0 h-5 w-0.5 bg-black opacity-30"
-                      style={{ left: `${s.target}%` }}
-                    />
+                    {/* Expected level marker */}
+                    {expectedPct > 0 && (
+                      <div
+                        className="absolute top-0 h-3 w-0.5 bg-black opacity-30"
+                        style={{ left: `${expectedPct}%` }}
+                      />
+                    )}
+                    <div className="flex justify-between mt-0.5">
+                      {['PK', 'K', '1st', '2nd', '3rd'].map((label, j) => (
+                        <span key={j} className="text-[7px] text-gray-400 font-bold">{label}</span>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Status badges */}
+                  <div className="flex gap-2 mt-1">
+                    {sl.statusCounts.ahead > 0 && (
+                      <span className="text-[9px] font-bold" style={{ color: 'var(--green)' }}>🟢 {sl.statusCounts.ahead}</span>
+                    )}
+                    {sl.statusCounts['on-track'] > 0 && (
+                      <span className="text-[9px] font-bold" style={{ color: 'var(--orange)' }}>🟡 {sl.statusCounts['on-track']}</span>
+                    )}
+                    {sl.statusCounts.behind > 0 && (
+                      <span className="text-[9px] font-bold" style={{ color: 'var(--red)' }}>🔴 {sl.statusCounts.behind}</span>
+                    )}
+                    <span className="text-[9px] text-gray-300 font-semibold">{sl.filledCount} skills rated</span>
                   </div>
                 </div>
-                <span className="text-[10px] text-gray-400 font-bold w-10 text-right">{s.target}%</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
-          <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400 font-semibold">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-black opacity-30 inline-block" /> Benchmark</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: 'var(--green)' }} /> On track</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: 'var(--orange)' }} /> Getting there</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: 'var(--red)' }} /> Needs work</span>
+          <div className="flex items-center gap-4 mt-4 text-[10px] text-gray-400 font-semibold">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-black opacity-30 inline-block" /> Expected</span>
+            <span className="flex items-center gap-1">🟢 Ahead</span>
+            <span className="flex items-center gap-1">🟡 On Track</span>
+            <span className="flex items-center gap-1">🔴 Behind</span>
           </div>
         </div>
       )}
@@ -148,7 +199,7 @@ export default function Dashboard() {
         <h3 className="font-black text-black mb-3">👩‍🎓 Students</h3>
         <div className="space-y-2">
           {students.map(s => {
-            const a = getLatestAssessment(s.id)
+            const a = getLatestAnalysis(s.id)
             const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
             const ufli = a?.ai_analysis?.ufli_placement?.current_working_unit
             const sessCount = allSessions.filter(ses => ses.student_id === s.id).length

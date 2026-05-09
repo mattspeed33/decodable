@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getAllSessions, getScheduledSessions, getLatestAssessment, saveScheduledSession, deleteScheduledSession } from '../lib/storage'
+import { getStudents, getAllSessions, getScheduledSessions, getLatestAnalysis, saveScheduledSession, deleteScheduledSession } from '../lib/storage'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DAY_NAME_TO_NUM = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 }
@@ -130,7 +130,7 @@ export default function CalendarPage() {
   }
 
   function getStudentFocus(studentId) {
-    const a = getLatestAssessment(studentId)
+    const a = getLatestAnalysis(studentId)
     if (!a?.ai_analysis) return null
     const arc = (a.ai_analysis.week_arc || a.ai_analysis.four_week_arc)
     if (!arc?.length) return a.ai_analysis.ufli_placement?.current_unit_name || null
