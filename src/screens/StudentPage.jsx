@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, getEmailLog, getHomeworkSheets } from '../lib/storage'
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
@@ -46,7 +46,9 @@ function getNextAction(student, assessment, analysis, sessions, emails, homework
 
 export default function StudentPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('profile')
+  const [autoStartIntake, setAutoStartIntake] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   function refresh() { setRefreshKey(k => k + 1) }
@@ -72,7 +74,7 @@ export default function StudentPage() {
   function renderContent() {
     switch (activeTab) {
       case 'profile': return <ProfileTab studentId={id} onRefresh={refresh} />
-      case 'assessments': return <AssessmentsTab studentId={id} onRefresh={refresh} />
+      case 'assessments': return <AssessmentsTab studentId={id} onRefresh={refresh} autoStartIntake={autoStartIntake} />
       case 'sessions': return <SessionsTab studentId={id} onRefresh={refresh} />
       case 'parent': return <ParentHubTab studentId={id} onRefresh={refresh} />
       case 'report': return <ReportCardTab studentId={id} />
@@ -82,7 +84,10 @@ export default function StudentPage() {
 
   return (
     <div className="space-y-5">
-      {/* Student header */}
+      {/* Back + Student header */}
+      <button onClick={() => navigate('/students')} className="text-xs font-bold text-gray-400 hover:text-black transition flex items-center gap-1 mb-1">
+        ← Students
+      </button>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl">{gradeEmoji[student.grade] || '📚'}</span>
@@ -98,7 +103,7 @@ export default function StudentPage() {
 
       {/* What's next banner */}
       <button
-        onClick={() => nextAction.tab && setActiveTab(nextAction.tab)}
+        onClick={() => { if (nextAction.tab) { setActiveTab(nextAction.tab); if (!assessment) setAutoStartIntake(true) } }}
         className={`w-full rounded-2xl border-2 p-4 flex items-center gap-3 transition text-left ${nextAction.tab ? 'hover:shadow-md cursor-pointer' : 'cursor-default'}`}
         style={{ borderColor: nextAction.color, background: `color-mix(in srgb, ${nextAction.color} 8%, white)` }}
       >

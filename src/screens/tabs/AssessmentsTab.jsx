@@ -34,20 +34,23 @@ function getAssessmentSummary(assessment) {
   return parts.join(' · ') || (assessment.entry_method === 'photo' ? 'Photo upload' : 'Digital entry')
 }
 
-export default function AssessmentsTab({ studentId, onRefresh }) {
+export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }) {
   const navigate = useNavigate()
   const student = getStudent(studentId)
   const sessions = getSessions(studentId)
 
-  const [view, setView] = useState('list') // 'list' | 'pick-category' | 'form' | 'select-for-analysis'
-  const [selectedCategory, setSelectedCategory] = useState(null)
+  const assessments = getAssessments(studentId)
+  const startWithIntake = autoStartIntake && assessments.length === 0
+  const [view, setView] = useState(startWithIntake ? 'form' : 'list')
+  const [selectedCategory, setSelectedCategory] = useState(startWithIntake ? 'intake-snapshot' : null)
+  const [editingAssessment, setEditingAssessment] = useState(null)
   const [selectedForAnalysis, setSelectedForAnalysis] = useState([])
   const [expandedAnalysisId, setExpandedAnalysisId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [saved, setSaved] = useState(false)
   const [, forceUpdate] = useState(0)
 
-  const assessments = getAssessments(studentId)
   const analyses = getAnalyses(studentId)
 
   function handleCategorySelected(categoryId) {
@@ -68,20 +71,23 @@ export default function AssessmentsTab({ studentId, onRefresh }) {
     }
 
     const assessment = {
-      id: crypto.randomUUID(),
+      id: editingAssessment?.id || crypto.randomUUID(),
       student_id: studentId,
-      date: new Date().toISOString().split('T')[0],
+      date: editingAssessment?.date || new Date().toISOString().split('T')[0],
       category_id: selectedCategory,
       entry_method: entryMethod,
       form_data: formData,
       photos: compressedPhotos,
       notes: formData.notes || '',
-      created_at: new Date().toISOString(),
+      created_at: editingAssessment?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
     saveAssessment(assessment)
     setView('list')
     setSelectedCategory(null)
+    setEditingAssessment(null)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
     forceUpdate(n => n + 1)
     onRefresh?.()
   }
@@ -159,8 +165,9 @@ export default function AssessmentsTab({ studentId, onRefresh }) {
     return (
       <AssessmentForm
         categoryId={selectedCategory}
+        initialData={editingAssessment?.form_data}
         onSave={handleSaveAssessment}
-        onCancel={() => { setView('list'); setSelectedCategory(null) }}
+        onCancel={() => { setView('list'); setSelectedCategory(null); setEditingAssessment(null) }}
       />
     )
   }
@@ -203,6 +210,7 @@ export default function AssessmentsTab({ studentId, onRefresh }) {
       </div>
 
       {error && <div className="rounded-2xl bg-[var(--red-light)] p-3 text-sm text-[var(--red)] font-bold">{error}</div>}
+      {saved && <div className="rounded-2xl bg-[var(--green-light)] p-3 text-sm text-[var(--green)] font-bold">Assessment saved!</div>}
 
       {/* Intake CTA for new students */}
       {!hasAssessments && (
@@ -238,12 +246,20 @@ export default function AssessmentsTab({ studentId, onRefresh }) {
                     </p>
                     <p className="text-[10px] text-gray-500 mt-0.5 truncate">{getAssessmentSummary(assessment)}</p>
                   </div>
-                  <button
-                    onClick={() => { if (confirm('Delete this assessment?')) { deleteAssessment(assessment.id); forceUpdate(n => n + 1); onRefresh?.() } }}
-                    className="action-buttons text-[10px] font-bold text-gray-300 hover:text-[var(--red)] transition px-2"
-                  >
-                    🗑️
-                  </button>
+                  <div className="action-buttons flex gap-1 shrink-0">
+                    <button
+                      onClick={() => { setEditingAssessment(assessment); setSelectedCategory(assessment.category_id); setView('form') }}
+                      className="text-[10px] font-bold text-gray-300 hover:text-[var(--primary)] transition px-1"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => { if (confirm('Delete this assessment?')) { deleteAssessment(assessment.id); forceUpdate(n => n + 1); onRefresh?.() } }}
+                      className="text-[10px] font-bold text-gray-300 hover:text-[var(--red)] transition px-1"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

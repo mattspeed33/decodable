@@ -11,6 +11,8 @@ const ALL_STORAGE_KEYS = [
   'decodable_template_assignments',
   'decodable_homework_sheets',
   'decodable_scheduled_sessions',
+  'decodable_analyses',
+  'decodable_report_cards',
 ]
 
 function getSettings() {

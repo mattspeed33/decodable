@@ -9,6 +9,83 @@ import LoadingState from '../../components/LoadingState.jsx'
 import PhotoUploader from '../../components/PhotoUploader.jsx'
 import { SESSION_TEMPLATES } from '../../lib/sessionTemplates'
 
+const quickStartInputClass = 'w-full border-2 border-gray-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent bg-white'
+
+function QuickStartForm({ student, onGenerate }) {
+  const [reading, setReading] = useState('')
+  const [concerns, setConcerns] = useState('')
+  const [triedBefore, setTriedBefore] = useState('')
+  const [strengths, setStrengths] = useState('')
+  const [sessionLen, setSessionLen] = useState(student?.session_length_minutes || 50)
+
+  function handleSubmit() {
+    const context = `
+STUDENT: ${student.name}, ${student.grade} grade, age ${student.age}
+SESSION TYPE: ${student.session_type}
+SESSION LENGTH TODAY: ${sessionLen} minutes
+SESSIONS COMPLETED: 0 (first session)
+TUTOR NAME: ${student.tutor_name || 'Tutor'}
+
+QUICK ASSESSMENT (teacher observations, no formal assessment yet):
+Reading level estimate: ${reading || 'Not sure yet'}
+Parent/teacher concerns: ${concerns || 'None noted'}
+What has been tried before: ${triedBefore || 'Unknown'}
+Observed strengths: ${strengths || 'Not yet observed'}
+
+NOTES FROM LAST SESSION:
+No previous session — this is session 1. Use this as a getting-to-know-you session.
+Focus on building rapport and doing informal observation while working through activities.
+    `.trim()
+    onGenerate(context)
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
+      <h3 className="font-black text-black">Quick Student Snapshot</h3>
+      <p className="text-xs text-gray-400">Answer what you can — it's OK to leave some blank. This helps generate a first session plan.</p>
+
+      <div>
+        <label className="block text-xs font-bold text-black mb-1">Where do you think they're reading at?</label>
+        <select className={quickStartInputClass} value={reading} onChange={e => setReading(e.target.value)}>
+          <option value="">Not sure yet</option>
+          <option value="Pre-K level — not reading yet">Pre-K — not reading yet</option>
+          <option value="K level — knows some letters, early CVC">K — knows some letters</option>
+          <option value="Early 1st — reading simple words">Early 1st — simple words</option>
+          <option value="Late 1st — reading short sentences">Late 1st — short sentences</option>
+          <option value="2nd grade level">2nd grade level</option>
+          <option value="3rd grade level">3rd grade level</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-black mb-1">What are the main concerns?</label>
+        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={concerns} onChange={e => setConcerns(e.target.value)} placeholder="e.g., struggles to sound out new words, guesses instead of reading, can't spell..." />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-black mb-1">What has been tried before?</label>
+        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={triedBefore} onChange={e => setTriedBefore(e.target.value)} placeholder="e.g., school reading support, other tutoring, parent practice at home..." />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-black mb-1">Any strengths you've noticed?</label>
+        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={strengths} onChange={e => setStrengths(e.target.value)} placeholder="e.g., loves stories, knows letter names, good listener..." />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-black mb-1">Session length</label>
+        <select className={quickStartInputClass} value={sessionLen} onChange={e => setSessionLen(Number(e.target.value))}>
+          {[30, 45, 50, 60, 65, 90].map(m => <option key={m} value={m}>{m} min</option>)}
+        </select>
+      </div>
+
+      <button onClick={handleSubmit} className="w-full bg-[var(--primary)] text-white py-3 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
+        Generate First Session Plan
+      </button>
+    </div>
+  )
+}
+
 const blockEmoji = {
   'warm-up': '☀️', 'phonemic_awareness': '👂', 'phonics_instruction': '🔤',
   'connected_reading': '📖', 'encoding_spelling': '✍️', 'confidence_close': '⭐'
@@ -154,12 +231,56 @@ Previous sessions completed: ${allSessions.length}
     }
   }
 
-  if (!student || !assessment) {
+  // Zero-assessment state — offer intake session or quick start
+  if (!student) return null
+  if (!assessment && !analysis) {
     return (
-      <div className="text-center py-12 bg-white rounded-2xl border-2 border-gray-100">
-        <span className="text-4xl block mb-2">📸</span>
-        <p className="text-gray-400 font-bold">Upload an assessment first</p>
-        <p className="text-gray-400 text-sm">Sessions are planned based on assessment data.</p>
+      <div className="space-y-4">
+        <h3 className="font-black text-black text-lg">Get Started</h3>
+        <p className="text-sm text-gray-500">No assessments yet. Choose how to start your first session:</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setMode('intake')}
+            className="bg-white rounded-2xl border-2 border-[var(--primary)] p-5 text-left hover:shadow-md transition-all"
+          >
+            <span className="text-2xl block mb-2">📋</span>
+            <p className="font-black text-black text-sm">Start Intake Session</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Run the full intake assessment, then get an AI session plan based on the results.</p>
+          </button>
+          <button
+            onClick={() => setMode('quick-start')}
+            className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
+          >
+            <span className="text-2xl block mb-2">⚡</span>
+            <p className="font-black text-black text-sm">Quick Start</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Answer a few quick questions about the student and jump straight into a session plan.</p>
+          </button>
+        </div>
+
+        {mode === 'intake' && (
+          <div className="bg-[var(--primary-light)] rounded-2xl p-5 border-2 border-[var(--primary)]">
+            <p className="text-sm font-bold text-[var(--primary)] mb-2">Go to the Assessments tab to complete the intake assessment first, then come back here to plan your session.</p>
+          </div>
+        )}
+
+        {mode === 'quick-start' && (
+          <QuickStartForm student={student} onGenerate={async (context) => {
+            setLoading(true)
+            setError(null)
+            try {
+              const result = await runPrompt({ systemPrompt: sessionPrompt, userMessage: context })
+              setPlan(JSON.parse(result))
+              setMode('plan')
+            } catch (err) {
+              setError(err.message || 'Failed to generate session plan.')
+            } finally {
+              setLoading(false)
+            }
+          }} />
+        )}
+
+        {error && <div className="rounded-2xl bg-[var(--red-light)] p-3 text-sm text-[var(--red)] font-bold">{error}</div>}
       </div>
     )
   }
@@ -171,6 +292,54 @@ Previous sessions completed: ${allSessions.length}
 
   return (
     <div className="space-y-5">
+      {/* Session context panel */}
+      {mode === null && !plan && analysis && (
+        <div className="bg-white rounded-2xl border-2 border-gray-100 p-5 space-y-3">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Session {allSessions.length + 1} Context</p>
+
+          {/* Current focus from week arc */}
+          {currentWeek && (
+            <div className="bg-[var(--blue-light)] rounded-xl p-3 flex items-start gap-2.5">
+              <span className="text-lg">🎯</span>
+              <div>
+                <p className="text-xs font-bold text-[var(--blue)]">This Week's Focus</p>
+                <p className="text-sm font-bold text-black">{currentWeek.focus}</p>
+                <p className="text-[11px] text-gray-500">{currentWeek.activity_type}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* UFLI placement */}
+            {analysis.ufli_placement && (
+              <div className="bg-[var(--primary-light)] rounded-xl p-3">
+                <p className="text-[10px] font-bold text-[var(--primary)] uppercase">UFLI Unit</p>
+                <p className="text-lg font-black text-[var(--primary)]">{analysis.ufli_placement.current_working_unit}</p>
+                <p className="text-[10px] text-gray-500">{analysis.ufli_placement.current_unit_name}</p>
+              </div>
+            )}
+
+            {/* Last session notes */}
+            {lastSession && (
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Last Session</p>
+                <p className="text-xs text-gray-700 mt-0.5 line-clamp-2">{lastSession.what_needs_more_work || lastSession.tutor_notes || 'No notes'}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Priority gaps */}
+          {analysis.priority_gaps?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <span className="text-[10px] font-bold text-gray-400 uppercase mr-1">Gaps:</span>
+              {analysis.priority_gaps.map((g, i) => (
+                <span key={i} className="text-[10px] bg-[var(--red-light)] text-[var(--red)] px-2 py-0.5 rounded-full font-bold">{g.gap}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Action tiles */}
       {mode === null && !plan && (
         <div className="grid grid-cols-3 gap-3">
