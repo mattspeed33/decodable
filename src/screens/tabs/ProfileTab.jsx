@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getStudent, saveStudent, getLatestAnalysis, saveAnalysis } from '../../lib/storage'
+import { getStudent, saveStudent, getLatestAnalysis, saveAnalysis, getLatestAssessment } from '../../lib/storage'
 import { runPrompt } from '../../lib/claude'
 import LoadingState from '../../components/LoadingState.jsx'
 
