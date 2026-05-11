@@ -67,12 +67,16 @@ for (const [slug, config] of Object.entries(RESOURCES)) {
 }
 
 export default async function handler(req, res) {
-  const path = req.query.path || []
-  if (path.length === 0 || path.length > 2) {
+  // Vercel's legacy Node runtime doesn't reliably populate req.query.path for
+  // catch-all routes, so derive the segments from req.url directly.
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
+  const segments = url.pathname.replace(/^\/api\//, '').split('/').filter(Boolean)
+
+  if (segments.length === 0 || segments.length > 2) {
     return res.status(404).json({ error: 'Not found' })
   }
 
-  const [slug, id] = path
+  const [slug, id] = segments
   const resource = handlers[slug]
   if (!resource) return res.status(404).json({ error: `Unknown resource: ${slug}` })
 
