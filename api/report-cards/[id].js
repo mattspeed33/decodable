@@ -1,0 +1,2 @@
+import { makeItemHandler } from '../_lib/crud.js'
+export default makeItemHandler({ table: 'report_cards' })
