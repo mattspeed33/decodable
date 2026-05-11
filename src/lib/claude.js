@@ -14,25 +14,23 @@ export async function runPrompt({ systemPrompt, userMessage, images = [] }) {
 
   content.push({ type: 'text', text: userMessage })
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const token = await window.Clerk?.session?.getToken()
+  if (!token) {
+    throw new Error('Not signed in')
+  }
+
+  const response = await fetch('/api/ai/run-prompt', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 4000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content }]
-    })
+    body: JSON.stringify({ systemPrompt, content })
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error?.message || 'Claude API call failed')
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.error?.message || err.error || 'Claude API call failed')
   }
 
   const data = await response.json()
