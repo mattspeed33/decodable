@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useReducer } from 'react'
 import { useParams } from 'react-router-dom'
 import { getCategoryById, getDefaultPdfPath } from '../lib/skillsCategories'
 
@@ -23,13 +23,10 @@ function removeCustomTemplate(categoryId) {
 export default function AssessmentTemplateDetail() {
   const { categoryId } = useParams()
   const category = getCategoryById(categoryId)
-  const [custom, setCustom] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [, refresh] = useReducer(x => x + 1, 0)
 
-  useEffect(() => {
-    const stored = getCustomTemplates()[categoryId]
-    if (stored) setCustom(stored)
-  }, [categoryId])
+  const custom = getCustomTemplates()[categoryId] || null
 
   if (!category) {
     return <p className="text-center text-gray-400 py-20">Category not found.</p>
@@ -45,7 +42,6 @@ export default function AssessmentTemplateDetail() {
     reader.onload = (ev) => {
       const data = { name: file.name, dataUrl: ev.target.result, uploadedAt: new Date().toISOString() }
       saveCustomTemplate(categoryId, data)
-      setCustom(data)
       setUploading(false)
     }
     reader.readAsDataURL(file)
@@ -54,7 +50,7 @@ export default function AssessmentTemplateDetail() {
 
   function handleRemove() {
     removeCustomTemplate(categoryId)
-    setCustom(null)
+    refresh()
   }
 
   return (

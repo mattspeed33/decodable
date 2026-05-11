@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudent, getAssessments, getAnalyses, getSessions, saveAssessment, deleteAssessment, saveAnalysis } from '../../lib/storage'
+import { getStudent, getAssessments, getAnalyses, getSessions, saveAssessment, deleteAssessment } from '../../lib/storage'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
 import { serializeFormData } from '../../lib/assessmentFormSchemas'

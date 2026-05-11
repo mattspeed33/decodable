@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getStudents, getAllSessions, getLatestAnalysis, getReportCards } from '../lib/storage'
-import { GRADE_LEVELS, GRADE_LEVEL_MAP, EXPECTED_LEVEL, getStatus, getLevelPercent } from '../lib/gradeLevels'
+import { GRADE_LEVELS, EXPECTED_LEVEL, getStatus, getLevelPercent } from '../lib/gradeLevels'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -40,14 +40,13 @@ export default function Dashboard() {
 
   const studentsWithData = studentLevels.filter(s => s.skills)
   const totalAhead = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.ahead || 0), 0)
-  const totalBehind = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.behind || 0), 0)
-  const totalOnTrack = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.['on-track'] || 0), 0)
 
   // Sessions per day (last 7 days) for bar chart
   const dailySessions = useMemo(() => {
+    const today = new Date()
     const days = []
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000)
       const dateStr = d.toISOString().split('T')[0]
       const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' })
       const count = allSessions.filter(s => s.date === dateStr).length

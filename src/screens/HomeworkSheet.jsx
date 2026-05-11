@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getStudent, getLatestAssessment, saveHomeworkSheet } from '../lib/storage'
 import { runPrompt } from '../lib/claude'
@@ -33,8 +33,17 @@ export default function HomeworkSheet() {
     }
   }
 
+  // Fire one AI generation on mount. Ref guard prevents StrictMode double-fire
+  // (which would cost a second API call). Effect intentionally has no deps;
+  // re-running on student/assessment change would re-generate on every render.
+  const generatedRef = useRef(false)
   useEffect(() => {
-    if (student && assessment) generate()
+    if (generatedRef.current) return
+    if (!student || !assessment) return
+    generatedRef.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    generate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!student || !assessment) {

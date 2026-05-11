@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 
 const STORAGE_KEY = 'decodable_settings'
 const ALL_STORAGE_KEYS = [
@@ -39,16 +39,11 @@ const defaults = {
 }
 
 export default function Settings() {
-  const [settings, setSettings] = useState(defaults)
+  const [settings, setSettings] = useState(() => ({ ...defaults, ...getSettings() }))
   const [saved, setSaved] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [importStatus, setImportStatus] = useState(null)
   const fileInputRef = useRef()
-
-  useEffect(() => {
-    const stored = getSettings()
-    setSettings(s => ({ ...s, ...stored }))
-  }, [])
 
   function update(key, value) {
     setSettings(s => ({ ...s, [key]: value }))

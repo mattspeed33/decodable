@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, getEmailLog, getHomeworkSheets } from '../lib/storage'
+import { getStudent, getLatestAssessment, getLatestAnalysis, getSessions, getEmailLog, getHomeworkSheets } from '../lib/storage'
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
 import SessionsTab from './tabs/SessionsTab.jsx'
@@ -49,7 +49,7 @@ export default function StudentPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('profile')
   const [autoStartIntake, setAutoStartIntake] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [, setRefreshKey] = useState(0)
 
   function refresh() { setRefreshKey(k => k + 1) }
 

@@ -10,7 +10,11 @@
       "Bash(npx vercel *)",
       "Bash(npm install *)",
       "Bash(git -C /Users/mattwetmore/Documents/Decodable status)",
-      "Bash(git -C /Users/mattwetmore/Documents/Decodable diff --stat)"
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable diff --stat)",
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable add vercel.json)",
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable commit -m ' *)",
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable push origin main)",
+      "Bash(npm run *)"
     ]
   }
 }

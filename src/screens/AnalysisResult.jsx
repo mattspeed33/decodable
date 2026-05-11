@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { saveAnalysis, getStudent } from '../lib/storage'
 
@@ -6,14 +6,10 @@ export default function AnalysisResult() {
   const { id } = useParams()
   const navigate = useNavigate()
   const student = getStudent(id)
-  const [data, setData] = useState(null)
-
-  useEffect(() => {
+  const [data] = useState(() => {
     const raw = sessionStorage.getItem('decodable_pending_analysis')
-    if (raw) {
-      setData(JSON.parse(raw))
-    }
-  }, [])
+    return raw ? JSON.parse(raw) : null
+  })
 
   if (!data) {
     return (

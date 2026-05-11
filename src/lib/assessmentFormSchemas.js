@@ -19,13 +19,6 @@ const FLUENCY_OPTIONS = [
   { value: 'word-by-word', label: 'Word-by-word' },
 ]
 
-const PASSAGE_OPTIONS = [
-  { value: 'k', label: 'K — The Cat' },
-  { value: '1st', label: '1st — The Ship' },
-  { value: '2nd', label: '2nd — A Day at the Lake' },
-  { value: '3rd', label: '3rd — The Picnic Plan' },
-]
-
 export const FORM_SCHEMAS = {
   // ─── 00 INTAKE SNAPSHOT ────────────────────────────────
   'intake-snapshot': {

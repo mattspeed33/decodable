@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getAllSessions, getScheduledSessions, getLatestAnalysis, saveScheduledSession, deleteScheduledSession } from '../lib/storage'
+import { getStudents, getAllSessions, getScheduledSessions, getLatestAnalysis } from '../lib/storage'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DAY_NAME_TO_NUM = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 }
@@ -62,7 +62,6 @@ export default function CalendarPage() {
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [hoveredEvent, setHoveredEvent] = useState(null)
-  const [selectedDate, setSelectedDate] = useState(null)
 
   const students = getStudents()
   const allSessions = getAllSessions()

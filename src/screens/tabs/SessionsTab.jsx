@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession, saveAnalysis } from '../../lib/storage'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { sessionPrompt } from '../../prompts/sessionPrompt'
@@ -97,7 +96,6 @@ const blockColors = {
 }
 
 export default function SessionsTab({ studentId, onRefresh }) {
-  const navigate = useNavigate()
   const student = getStudent(studentId)
   const assessment = getLatestAssessment(studentId)
   const lastSession = getLatestSession(studentId)
