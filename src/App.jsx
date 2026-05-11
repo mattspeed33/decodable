@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { SignedIn, SignedOut, SignIn } from '@clerk/clerk-react'
 import { runMigration } from './lib/migration'
 
 runMigration()
@@ -18,26 +19,35 @@ import CalendarPage from './screens/CalendarPage.jsx'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-[var(--bg)]">
-        <NavBar />
-        <main className="ml-56 max-w-4xl px-10 py-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="/students/new" element={<NewStudent />} />
-            <Route path="/students/:id" element={<StudentPage />} />
-            <Route path="/students/:id/analysis" element={<AnalysisResult />} />
-            <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
-            <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/templates" element={<AssessmentTemplates />} />
-            <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
-            <Route path="/homework" element={<HomeworkInbox />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <>
+      <SignedOut>
+        <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6">
+          <SignIn routing="hash" />
+        </div>
+      </SignedOut>
+      <SignedIn>
+        <BrowserRouter>
+          <div className="min-h-screen bg-[var(--bg)]">
+            <NavBar />
+            <main className="ml-56 max-w-4xl px-10 py-8">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/students" element={<Students />} />
+                <Route path="/students/new" element={<NewStudent />} />
+                <Route path="/students/:id" element={<StudentPage />} />
+                <Route path="/students/:id/analysis" element={<AnalysisResult />} />
+                <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
+                <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/templates" element={<AssessmentTemplates />} />
+                <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
+                <Route path="/homework" element={<HomeworkInbox />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </main>
+          </div>
+        </BrowserRouter>
+      </SignedIn>
+    </>
   )
 }

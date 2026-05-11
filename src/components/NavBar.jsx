@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { UserButton, useUser } from '@clerk/clerk-react'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
@@ -8,6 +9,17 @@ const navItems = [
   { path: '/homework', label: 'Homework', icon: '✏️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ]
+
+function UserMenu() {
+  const { user } = useUser()
+  const label = user?.primaryEmailAddress?.emailAddress || user?.username || 'Account'
+  return (
+    <div className="flex items-center gap-2 px-1">
+      <UserButton afterSignOutUrl="/" />
+      <span className="text-xs text-gray-500 truncate" title={label}>{label}</span>
+    </div>
+  )
+}
 
 export default function NavBar() {
   const navigate = useNavigate()
@@ -46,7 +58,8 @@ export default function NavBar() {
         ))}
       </nav>
 
-      <div className="px-4 py-4 border-t border-gray-100">
+      <div className="px-4 py-4 border-t border-gray-100 space-y-3">
+        <UserMenu />
         <div className="bg-[var(--gold-light)] rounded-xl p-3 text-center">
           <p className="text-xs font-bold text-[var(--orange)]">🔥 Keep teaching!</p>
         </div>
