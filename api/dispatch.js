@@ -67,22 +67,15 @@ for (const [slug, config] of Object.entries(RESOURCES)) {
 }
 
 export default async function handler(req, res) {
-  // Vercel's legacy Node runtime doesn't reliably populate req.query.path for
-  // catch-all routes, so derive the segments from req.url directly.
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
-  const segments = url.pathname.replace(/^\/api\//, '').split('/').filter(Boolean)
+  // slug and id arrive as query params from the vercel.json rewrites:
+  //   /api/<slug>         → /api/dispatch?slug=<slug>
+  //   /api/<slug>/<id>    → /api/dispatch?slug=<slug>&id=<id>
+  const { slug, id } = req.query
+  if (!slug) return res.status(404).json({ error: 'Missing resource slug' })
 
-  if (segments.length === 0 || segments.length > 2) {
-    return res.status(404).json({ error: 'Not found' })
-  }
-
-  const [slug, id] = segments
   const resource = handlers[slug]
   if (!resource) return res.status(404).json({ error: `Unknown resource: ${slug}` })
 
-  if (id) {
-    req.query.id = id
-    return resource.item(req, res)
-  }
+  if (id) return resource.item(req, res)
   return resource.collection(req, res)
 }
