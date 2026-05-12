@@ -28,7 +28,8 @@
       "Bash(curl -s \"https://decodable.vercel.app/api/assessments/test123\")",
       "Bash(curl -sI \"https://decodable.vercel.app/api/assessments/test123/foo\")",
       "Bash(curl -sI \"https://decodable.vercel.app/api/assessments/abc123\")",
-      "Bash(curl -s \"https://decodable.vercel.app/api/assessments/abc123\")"
+      "Bash(curl -s \"https://decodable.vercel.app/api/assessments/abc123\")",
+      "Bash(git add *)"
     ]
   }
 }

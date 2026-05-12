@@ -5,7 +5,9 @@ import { useEffect, useState, useCallback } from 'react'
 // any dep or the refresh counter changes. Cancels in-flight responses on
 // unmount or when deps change so we don't write stale state.
 export function useAsync(fn, deps = []) {
-  const [data, setData] = useState(null)
+  // Start as `undefined` (not `null`) so that destructuring defaults like
+  // `const { data: students = [] }` actually apply during the first render.
+  const [data, setData] = useState(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
