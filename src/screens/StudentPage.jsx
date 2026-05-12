@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getSessions, getEmailLog, getHomeworkSheets } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
 import SessionsTab from './tabs/SessionsTab.jsx'
@@ -49,22 +50,25 @@ export default function StudentPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('profile')
   const [autoStartIntake, setAutoStartIntake] = useState(false)
-  const [, setRefreshKey] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   function refresh() { setRefreshKey(k => k + 1) }
 
-  // Re-read all data from localStorage on every refresh
-  const student = getStudent(id)
+  const { data: student, loading: studentLoading } = useAsync(() => getStudent(id), [id, refreshKey])
+  const { data: assessment } = useAsync(() => getLatestAssessment(id), [id, refreshKey])
+  const { data: latestAnalysis } = useAsync(() => getLatestAnalysis(id), [id, refreshKey])
+  const { data: sessions = [] } = useAsync(() => getSessions(id), [id, refreshKey])
+  const { data: emails = [] } = useAsync(() => getEmailLog(id), [id, refreshKey])
+  const { data: homework = [] } = useAsync(() => getHomeworkSheets(id), [id, refreshKey])
+
+  if (studentLoading) {
+    return <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+  }
 
   if (!student) {
     return <p className="text-center text-gray-400 py-20">Student not found.</p>
   }
 
-  const assessment = getLatestAssessment(id)
-  const latestAnalysis = getLatestAnalysis(id)
-  const sessions = getSessions(id)
-  const emails = getEmailLog(id)
-  const homework = getHomeworkSheets(id)
   const nextAction = getNextAction(student, assessment, latestAnalysis, sessions, emails, homework)
   const analysis = latestAnalysis?.ai_analysis
   const weekArc = analysis?.week_arc || analysis?.four_week_arc

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getStudent, getAnalyses, getSessions, getReportCards, saveReportCard, deleteReportCard } from '../../lib/storage'
+import { useAsync } from '../../lib/useAsync'
 import { runPrompt } from '../../lib/claude'
 import { reportPrompt } from '../../prompts/reportPrompt'
 import { GRADE_LEVELS, GRADE_LEVEL_MAP, getStatus, getLevelPercent, SKILL_BENCHMARKS } from '../../lib/gradeLevels'
@@ -89,9 +90,9 @@ function SkillBar({ skill, level, studentGrade, onChangeLevel, readOnly }) {
 }
 
 function ReportCardEditor({ studentId, existingReport, onSave, onCancel }) {
-  const student = getStudent(studentId)
-  const sessions = getSessions(studentId)
-  const analyses = getAnalyses(studentId)
+  const { data: student, loading: studentLoading } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: sessions = [] } = useAsync(() => getSessions(studentId), [studentId])
+  const { data: analyses = [] } = useAsync(() => getAnalyses(studentId), [studentId])
   const settings = getSettings()
 
   const firstA = analyses.length > 0 ? analyses[analyses.length - 1]?.ai_analysis : null
@@ -167,7 +168,7 @@ Patterns: ${latestA?.patterns_to_watch?.join('; ')}
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
     const report = {
       id: existingReport?.id || crypto.randomUUID(),
       student_id: studentId,
@@ -180,10 +181,11 @@ Patterns: ${latestA?.patterns_to_watch?.join('; ')}
       parentSummary,
       tutorName,
     }
-    saveReportCard(report)
+    await saveReportCard(report)
     onSave()
   }
 
+  if (studentLoading || !student) return <LoadingState messages={['Loading…']} />
   if (loading) return <LoadingState messages={['📊 Mapping skills to grade levels...', '✍️ Writing the parent summary...', '📋 Building the report...']} />
 
   const statusCounts = { ahead: 0, 'on-track': 0, behind: 0, unknown: 0 }
@@ -360,9 +362,10 @@ Patterns: ${latestA?.patterns_to_watch?.join('; ')}
 }
 
 function ReportCardView({ report, studentId, onEdit, onBack }) {
-  const student = getStudent(studentId)
-  const sessions = getSessions(studentId)
+  const { data: student } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: sessions = [] } = useAsync(() => getSessions(studentId), [studentId])
   const settings = getSettings()
+  if (!student) return null
 
   const statusCounts = { ahead: 0, 'on-track': 0, behind: 0, unknown: 0 }
   SKILL_CONFIG.forEach(skill => {
@@ -500,17 +503,16 @@ function ReportCardView({ report, studentId, onEdit, onBack }) {
 }
 
 export default function ReportCardTab({ studentId }) {
-  const [view, setView] = useState('list') // 'list' | 'new' | 'edit' | 'view'
+  const [view, setView] = useState('list')
   const [selectedReport, setSelectedReport] = useState(null)
-  const [, forceUpdate] = useState(0)
-
-  const reports = getReportCards(studentId)
+  const { data: reports = [], refresh: refreshReports } = useAsync(() => getReportCards(studentId), [studentId])
+  const { data: student } = useAsync(() => getStudent(studentId), [studentId])
 
   if (view === 'new') {
     return (
       <ReportCardEditor
         studentId={studentId}
-        onSave={() => { setView('list'); forceUpdate(n => n + 1) }}
+        onSave={() => { setView('list'); refreshReports() }}
         onCancel={() => setView('list')}
       />
     )
@@ -521,7 +523,7 @@ export default function ReportCardTab({ studentId }) {
       <ReportCardEditor
         studentId={studentId}
         existingReport={selectedReport}
-        onSave={() => { setSelectedReport(null); setView('list'); forceUpdate(n => n + 1) }}
+        onSave={() => { setSelectedReport(null); setView('list'); refreshReports() }}
         onCancel={() => { setSelectedReport(null); setView('list') }}
       />
     )
@@ -560,7 +562,6 @@ export default function ReportCardTab({ studentId }) {
           <div className="space-y-3">
             {reports.map(report => {
               const filledSkills = Object.values(report.skillLevels || {}).filter(v => v && v !== 'not-assessed').length
-              const student = getStudent(studentId)
               const statusCounts = { ahead: 0, 'on-track': 0, behind: 0 }
               SKILL_CONFIG.forEach(skill => {
                 const level = report.skillLevels?.[skill.key]
@@ -600,7 +601,7 @@ export default function ReportCardTab({ studentId }) {
                       ✏️ Edit
                     </button>
                     <button
-                      onClick={() => { if (confirm('Delete this report card?')) { deleteReportCard(report.id); forceUpdate(n => n + 1) } }}
+                      onClick={async () => { if (confirm('Delete this report card?')) { await deleteReportCard(report.id); refreshReports() } }}
                       className="flex-1 py-2 text-[10px] font-bold text-gray-400 hover:text-[var(--red)] hover:bg-gray-50 transition border-l border-gray-100"
                     >
                       🗑️ Delete

@@ -1,303 +1,163 @@
+// Server-backed data access. Every function is async. Names match the pre-API
+// localStorage shape so most components only need to await the calls.
+import { apiList, apiGet, apiSave, apiDelete } from './api'
+
 // ── STUDENTS ──────────────────────────────────────────
-export function getStudents() {
-  return JSON.parse(localStorage.getItem('decodable_students') || '[]')
-}
-
-export function getStudent(id) {
-  return getStudents().find(s => s.id === id) || null
-}
-
-export function saveStudent(student) {
-  const students = getStudents()
-  const index = students.findIndex(s => s.id === student.id)
-  if (index >= 0) {
-    students[index] = student
-  } else {
-    students.push(student)
-  }
-  localStorage.setItem('decodable_students', JSON.stringify(students))
-}
-
-export function deleteStudent(id) {
-  const students = getStudents().filter(s => s.id !== id)
-  localStorage.setItem('decodable_students', JSON.stringify(students))
-}
+export const getStudents = () => apiList('students').then(r => r || [])
+export const getStudent = (id) => apiGet('students', id)
+export const saveStudent = (student) => apiSave('students', student)
+export const deleteStudent = (id) => apiDelete('students', id)
 
 // ── ASSESSMENTS ───────────────────────────────────────
-export function getAssessments(studentId) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_assessments') || '[]'
-  )
-  return all
-    .filter(a => a.student_id === studentId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+export const getAssessments = (studentId) =>
+  apiList('assessments', { student_id: studentId }).then(r => r || [])
+
+export const getLatestAssessment = async (studentId) => {
+  const list = await getAssessments(studentId)
+  return list[0] || null
 }
 
-export function getLatestAssessment(studentId) {
-  return getAssessments(studentId)[0] || null
-}
-
-export function saveAssessment(assessment) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_assessments') || '[]'
-  )
-  const index = all.findIndex(a => a.id === assessment.id)
-  if (index >= 0) {
-    all[index] = assessment
-  } else {
-    all.push(assessment)
-  }
-  localStorage.setItem('decodable_assessments', JSON.stringify(all))
-}
-
-// ── SCHEDULED SESSIONS ────────────────────────────────
-export function getScheduledSessions(studentId = null) {
-  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]')
-  const filtered = studentId ? all.filter(s => s.student_id === studentId) : all
-  return filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
-}
-
-export function saveScheduledSession(scheduled) {
-  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]')
-  const index = all.findIndex(s => s.id === scheduled.id)
-  if (index >= 0) { all[index] = scheduled } else { all.push(scheduled) }
-  localStorage.setItem('decodable_scheduled_sessions', JSON.stringify(all))
-}
-
-export function deleteScheduledSession(id) {
-  const all = JSON.parse(localStorage.getItem('decodable_scheduled_sessions') || '[]').filter(s => s.id !== id)
-  localStorage.setItem('decodable_scheduled_sessions', JSON.stringify(all))
-}
-
-// ── SESSIONS ──────────────────────────────────────────
-export function getAllSessions() {
-  return JSON.parse(localStorage.getItem('decodable_sessions') || '[]')
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-}
-
-export function getSessions(studentId) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_sessions') || '[]'
-  )
-  return all
-    .filter(s => s.student_id === studentId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-}
-
-export function getLatestSession(studentId) {
-  return getSessions(studentId)[0] || null
-}
-
-export function saveSession(session) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_sessions') || '[]'
-  )
-  const index = all.findIndex(s => s.id === session.id)
-  if (index >= 0) {
-    all[index] = session
-  } else {
-    all.push(session)
-  }
-  localStorage.setItem('decodable_sessions', JSON.stringify(all))
-}
-
-// ── EMAIL LOG ─────────────────────────────────────────
-export function getEmailLog(studentId) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_emails') || '[]'
-  )
-  return all
-    .filter(e => e.student_id === studentId)
-    .sort((a, b) => new Date(b.date_sent) - new Date(a.date_sent))
-}
-
-export function getLatestEmailSummary(studentId) {
-  const latest = getEmailLog(studentId)[0]
-  return latest?.summary_for_next_prompt || null
-}
-
-export function saveEmail(emailRecord) {
-  const all = JSON.parse(
-    localStorage.getItem('decodable_emails') || '[]'
-  )
-  all.push(emailRecord)
-  localStorage.setItem('decodable_emails', JSON.stringify(all))
-}
-
-// ── ASSESSMENT TEMPLATES ──────────────────────────────
-export function getAssessmentTemplates() {
-  return JSON.parse(localStorage.getItem('decodable_assessment_templates') || '[]')
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-}
-
-export function getAssessmentTemplate(templateId) {
-  return getAssessmentTemplates().find(t => t.id === templateId) || null
-}
-
-export function saveAssessmentTemplate(template) {
-  const all = getAssessmentTemplates()
-  const index = all.findIndex(t => t.id === template.id)
-  if (index >= 0) {
-    all[index] = template
-  } else {
-    all.push(template)
-  }
-  localStorage.setItem('decodable_assessment_templates', JSON.stringify(all))
-}
-
-export function deleteAssessmentTemplate(templateId) {
-  const all = getAssessmentTemplates().filter(t => t.id !== templateId)
-  localStorage.setItem('decodable_assessment_templates', JSON.stringify(all))
-}
-
-// ── TEMPLATE ASSIGNMENTS ──────────────────────────────
-export function getTemplateAssignments(studentId = null) {
-  const all = JSON.parse(localStorage.getItem('decodable_template_assignments') || '[]')
-  const filtered = studentId ? all.filter(a => a.student_id === studentId) : all
-  return filtered.sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at))
-}
-
-export function saveTemplateAssignment(assignment) {
-  const all = JSON.parse(localStorage.getItem('decodable_template_assignments') || '[]')
-  const index = all.findIndex(a => a.id === assignment.id)
-  if (index >= 0) {
-    all[index] = assignment
-  } else {
-    all.push(assignment)
-  }
-  localStorage.setItem('decodable_template_assignments', JSON.stringify(all))
-}
-
-// ── HOMEWORK SHEETS ───────────────────────────────────
-export function getHomeworkSheets(studentId = null) {
-  const all = JSON.parse(localStorage.getItem('decodable_homework_sheets') || '[]')
-  const filtered = studentId ? all.filter(s => s.student_id === studentId) : all
-  return filtered.sort((a, b) => new Date(b.assigned_at || b.created_at) - new Date(a.assigned_at || a.created_at))
-}
-
-export function getHomeworkSheet(sheetId) {
-  return getHomeworkSheets().find(s => s.id === sheetId) || null
-}
-
-export function saveHomeworkSheet(sheet) {
-  const all = getHomeworkSheets()
-  const index = all.findIndex(s => s.id === sheet.id)
-  if (index >= 0) {
-    all[index] = sheet
-  } else {
-    all.push(sheet)
-  }
-  localStorage.setItem('decodable_homework_sheets', JSON.stringify(all))
-}
+export const saveAssessment = (assessment) => apiSave('assessments', assessment)
+export const deleteAssessment = (id) => apiDelete('assessments', id)
 
 // ── ANALYSES ─────────────────────────────────────────
-export function getAnalyses(studentId) {
-  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]')
-  return all
-    .filter(a => a.student_id === studentId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-}
+export const getAllAnalyses = () => apiList('analyses').then(r => r || [])
 
-export function getLatestAnalysis(studentId) {
-  const analyses = getAnalyses(studentId)
-  if (analyses.length > 0) return analyses[0]
-  // Fallback: check legacy assessment records with ai_analysis baked in
-  const assessment = getLatestAssessment(studentId)
-  if (assessment?.ai_analysis) {
-    return { id: assessment.id, student_id: studentId, date: assessment.date, assessment_ids: [assessment.id], ai_analysis: assessment.ai_analysis }
+export const getAnalyses = (studentId) =>
+  apiList('analyses', { student_id: studentId }).then(r => r || [])
+
+export const getLatestAnalysis = async (studentId) => {
+  const list = await getAnalyses(studentId)
+  if (list.length > 0) return list[0]
+  // Legacy fallback: an old assessment might still embed ai_analysis directly.
+  const a = await getLatestAssessment(studentId)
+  if (a?.ai_analysis) {
+    return {
+      id: a.id,
+      student_id: studentId,
+      date: a.date,
+      assessment_ids: [a.id],
+      ai_analysis: a.ai_analysis,
+    }
   }
   return null
 }
 
-export function saveAnalysis(analysis) {
-  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]')
-  const index = all.findIndex(a => a.id === analysis.id)
-  if (index >= 0) {
-    all[index] = analysis
-  } else {
-    all.push(analysis)
-  }
-  localStorage.setItem('decodable_analyses', JSON.stringify(all))
+export const saveAnalysis = (analysis) => apiSave('analyses', analysis)
+export const deleteAnalysis = (id) => apiDelete('analyses', id)
+
+// ── SESSIONS ──────────────────────────────────────────
+export const getAllSessions = () => apiList('sessions').then(r => r || [])
+
+export const getSessions = (studentId) =>
+  apiList('sessions', { student_id: studentId }).then(r => r || [])
+
+export const getLatestSession = async (studentId) => {
+  const list = await getSessions(studentId)
+  return list[0] || null
 }
 
-export function deleteAnalysis(id) {
-  const all = JSON.parse(localStorage.getItem('decodable_analyses') || '[]').filter(a => a.id !== id)
-  localStorage.setItem('decodable_analyses', JSON.stringify(all))
+export const saveSession = (session) => apiSave('sessions', session)
+
+// ── SCHEDULED SESSIONS ────────────────────────────────
+export const getScheduledSessions = (studentId = null) => {
+  const filter = studentId ? { student_id: studentId } : undefined
+  return apiList('scheduled-sessions', filter).then(r => r || [])
 }
 
-export function deleteAssessment(id) {
-  const all = JSON.parse(localStorage.getItem('decodable_assessments') || '[]').filter(a => a.id !== id)
-  localStorage.setItem('decodable_assessments', JSON.stringify(all))
+export const saveScheduledSession = (s) => apiSave('scheduled-sessions', s)
+export const deleteScheduledSession = (id) => apiDelete('scheduled-sessions', id)
+
+// ── EMAIL LOG ─────────────────────────────────────────
+export const getEmailLog = (studentId) =>
+  apiList('emails', { student_id: studentId }).then(r => r || [])
+
+export const getLatestEmailSummary = async (studentId) => {
+  const list = await getEmailLog(studentId)
+  return list[0]?.summary_for_next_prompt || null
 }
+
+export const saveEmail = (record) => apiSave('emails', record)
+
+// ── ASSESSMENT TEMPLATES ──────────────────────────────
+export const getAssessmentTemplates = () =>
+  apiList('assessment-templates').then(r => r || [])
+
+export const getAssessmentTemplate = (templateId) =>
+  apiGet('assessment-templates', templateId)
+
+export const saveAssessmentTemplate = (template) =>
+  apiSave('assessment-templates', template)
+
+export const deleteAssessmentTemplate = (templateId) =>
+  apiDelete('assessment-templates', templateId)
+
+// ── TEMPLATE ASSIGNMENTS ──────────────────────────────
+export const getTemplateAssignments = (studentId = null) => {
+  const filter = studentId ? { student_id: studentId } : undefined
+  return apiList('template-assignments', filter).then(r => r || [])
+}
+
+export const saveTemplateAssignment = (a) => apiSave('template-assignments', a)
+
+// ── HOMEWORK SHEETS ───────────────────────────────────
+export const getHomeworkSheets = (studentId = null) => {
+  const filter = studentId ? { student_id: studentId } : undefined
+  return apiList('homework-sheets', filter).then(r => r || [])
+}
+
+export const getHomeworkSheet = (sheetId) => apiGet('homework-sheets', sheetId)
+export const saveHomeworkSheet = (sheet) => apiSave('homework-sheets', sheet)
 
 // ── REPORT CARDS ─────────────────────────────────────
-export function getReportCards(studentId) {
-  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]')
-  return all
-    .filter(r => r.student_id === studentId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-}
+export const getAllReportCards = () => apiList('report-cards').then(r => r || [])
 
-export function saveReportCard(report) {
-  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]')
-  const index = all.findIndex(r => r.id === report.id)
-  if (index >= 0) {
-    all[index] = report
-  } else {
-    all.push(report)
-  }
-  localStorage.setItem('decodable_report_cards', JSON.stringify(all))
-}
+export const getReportCards = (studentId) =>
+  apiList('report-cards', { student_id: studentId }).then(r => r || [])
 
-export function deleteReportCard(id) {
-  const all = JSON.parse(localStorage.getItem('decodable_report_cards') || '[]').filter(r => r.id !== id)
-  localStorage.setItem('decodable_report_cards', JSON.stringify(all))
-}
+export const saveReportCard = (report) => apiSave('report-cards', report)
+export const deleteReportCard = (id) => apiDelete('report-cards', id)
 
 // ── PROGRESS ──────────────────────────────────────────
-export function getProgress(studentId) {
-  const student = getStudent(studentId)
-  const assessments = getAssessments(studentId)
-  const sessions = getSessions(studentId)
+export async function getProgress(studentId) {
+  const [student, assessments, sessions, analyses] = await Promise.all([
+    getStudent(studentId),
+    getAssessments(studentId),
+    getSessions(studentId),
+    getAnalyses(studentId),
+  ])
 
   const gradeTargets = {
     'K':   { fluency_pct: 60, ufli_unit: 10 },
     '1st': { fluency_pct: 85, ufli_unit: 17 },
     '2nd': { fluency_pct: 85, ufli_unit: 20 },
-    '3rd': { fluency_pct: 90, ufli_unit: 24 }
+    '3rd': { fluency_pct: 90, ufli_unit: 24 },
   }
-
   const target = gradeTargets[student?.grade] || gradeTargets['1st']
-  const analyses = getAnalyses(studentId)
   const latestAn = analyses[0]
 
   return {
     student_id: studentId,
     assessments_completed: assessments.length,
     sessions_completed: sessions.length,
-    sessions_remaining:
-      (student?.total_sessions_planned || 4) - sessions.length,
+    sessions_remaining: (student?.total_sessions_planned || 4) - sessions.length,
     fluency_over_time: analyses.map(a => ({
       date: a.date,
-      fluency_pct: a.ai_analysis?.fluency_estimate_pct || 0
+      fluency_pct: a.ai_analysis?.fluency_estimate_pct || 0,
     })).reverse(),
     ufli_units_over_time: analyses.map(a => ({
       date: a.date,
-      working_unit: a.ai_analysis?.ufli_placement?.current_working_unit || 0
+      working_unit: a.ai_analysis?.ufli_placement?.current_working_unit || 0,
     })).reverse(),
     grade_level_benchmark: {
       grade: student?.grade,
       expected_fluency_pct: target.fluency_pct,
       expected_ufli_unit: target.ufli_unit,
       current_fluency_pct: latestAn?.ai_analysis?.fluency_estimate_pct || 0,
-      current_ufli_unit:
-        latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0,
-      fluency_gap: target.fluency_pct -
-        (latestAn?.ai_analysis?.fluency_estimate_pct || 0),
-      unit_gap: target.ufli_unit -
-        (latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0)
+      current_ufli_unit: latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0,
+      fluency_gap: target.fluency_pct - (latestAn?.ai_analysis?.fluency_estimate_pct || 0),
+      unit_gap: target.ufli_unit - (latestAn?.ai_analysis?.ufli_placement?.current_working_unit || 0),
     },
-    flags_still_active:
-      latestAn?.ai_analysis?.patterns_to_watch || []
+    flags_still_active: latestAn?.ai_analysis?.patterns_to_watch || [],
   }
 }

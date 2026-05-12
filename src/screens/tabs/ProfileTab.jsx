@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getStudent, saveStudent, getLatestAnalysis, saveAnalysis, getLatestAssessment } from '../../lib/storage'
+import { useAsync } from '../../lib/useAsync'
 import { runPrompt } from '../../lib/claude'
 import LoadingState from '../../components/LoadingState.jsx'
 
@@ -24,13 +25,21 @@ Respond in valid JSON only. Return an array of week objects:
 [{ "week": 1, "focus": "", "ufli_unit": 0, "activity_type": "" }]`
 
 export default function ProfileTab({ studentId, onRefresh }) {
-  const student = getStudent(studentId)
+  const { data: student, loading, refresh } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: latestAssessment } = useAsync(() => getLatestAssessment(studentId), [studentId])
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ ...student })
+  const [form, setForm] = useState(null)
   const [saved, setSaved] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
 
-  if (!student) return null
+  // Initialize form from loaded student. Re-syncs if student is refreshed.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (student && !form) setForm({ ...student })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student])
+
+  if (loading || !student) return <p className="text-center text-gray-400 py-10 text-sm font-bold">Loading…</p>
 
   function update(key, value) {
     setForm(f => ({ ...f, [key]: value }))
@@ -41,11 +50,10 @@ export default function ProfileTab({ studentId, onRefresh }) {
     const newEngagement = form.total_sessions_planned
     const engagementChanged = oldEngagement !== newEngagement
 
-    saveStudent(form)
+    await saveStudent(form)
 
-    // If engagement length changed and we have an assessment, regenerate the arc
     if (engagementChanged) {
-      const analysisRecord = getLatestAnalysis(studentId)
+      const analysisRecord = await getLatestAnalysis(studentId)
       if (analysisRecord?.ai_analysis) {
         const newWeeks = newEngagement === 999 ? 4 : newEngagement
         setRegenerating(true)
@@ -64,16 +72,15 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           const result = await runPrompt({ systemPrompt: arcRegeneratePrompt, userMessage: context })
           const newArc = JSON.parse(result)
 
-          // Update the analysis with new arc
           const updatedAnalysis = {
             ...analysisRecord,
             ai_analysis: {
               ...analysisRecord.ai_analysis,
               week_arc: newArc,
-              four_week_arc: undefined
-            }
+              four_week_arc: undefined,
+            },
           }
-          saveAnalysis(updatedAnalysis)
+          await saveAnalysis(updatedAnalysis)
         } catch (err) {
           console.error('Failed to regenerate arc:', err)
         } finally {
@@ -84,6 +91,7 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
 
     setEditing(false)
     setSaved(true)
+    refresh()
     onRefresh?.()
     setTimeout(() => setSaved(false), 2000)
   }
@@ -99,11 +107,10 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
   if (!editing) {
     return (
       <div className="space-y-4">
-        {/* Student Info */}
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-black text-black">👤 Student Info</h3>
-            <button onClick={() => setEditing(true)} className="text-xs font-bold text-[var(--primary)] hover:underline">Edit</button>
+            <button onClick={() => { setForm({ ...student }); setEditing(true) }} className="text-xs font-bold text-[var(--primary)] hover:underline">Edit</button>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><p className={labelClass}>Name</p><p className={valueClass}>{student.name}</p></div>
@@ -115,32 +122,16 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           </div>
         </div>
 
-        {/* Schedule */}
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
           <h3 className="font-black text-black mb-4">🗓️ Schedule</h3>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className={labelClass}>Session Day</p>
-              <p className={valueClass}>{student.session_day || '—'}</p>
-            </div>
-            <div>
-              <p className={labelClass}>Session Time</p>
-              <p className={valueClass}>{student.session_time || '—'}</p>
-            </div>
-            <div>
-              <p className={labelClass}>Engagement Length</p>
-              <p className={valueClass}>
-                {student.total_sessions_planned === 999 ? 'Ongoing' : `${student.total_sessions_planned} weeks`}
-              </p>
-            </div>
-            <div>
-              <p className={labelClass}>Start Date</p>
-              <p className={valueClass}>{student.start_date}</p>
-            </div>
+            <div><p className={labelClass}>Session Day</p><p className={valueClass}>{student.session_day || '—'}</p></div>
+            <div><p className={labelClass}>Session Time</p><p className={valueClass}>{student.session_time || '—'}</p></div>
+            <div><p className={labelClass}>Engagement Length</p><p className={valueClass}>{student.total_sessions_planned === 999 ? 'Ongoing' : `${student.total_sessions_planned} weeks`}</p></div>
+            <div><p className={labelClass}>Start Date</p><p className={valueClass}>{student.start_date}</p></div>
           </div>
         </div>
 
-        {/* Parent Info */}
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
           <h3 className="font-black text-black mb-4">👨‍👧 Parent Info</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -149,7 +140,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           </div>
         </div>
 
-        {/* Intake Notes */}
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
           <h3 className="font-black text-black mb-3">📝 Intake Notes</h3>
           <p className="text-sm text-gray-700 leading-relaxed">
@@ -157,7 +147,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           </p>
         </div>
 
-        {/* Curriculum Flags */}
         {student.curriculum_flags && (
           <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
             <h3 className="font-black text-black mb-3">📚 Curriculum Frameworks</h3>
@@ -178,9 +167,10 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
     )
   }
 
-  // Edit mode
+  if (!form) return null
+
   const engagementWillChange = form.total_sessions_planned !== student.total_sessions_planned
-  const hasAssessment = !!getLatestAssessment(studentId)
+  const hasAssessment = !!latestAssessment
 
   return (
     <div className="space-y-4">
@@ -223,7 +213,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
         </div>
       </div>
 
-      {/* Schedule */}
       <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
         <h3 className="font-black text-black">🗓️ Schedule</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -250,7 +239,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           </div>
         </div>
 
-        {/* Warning if engagement length is changing */}
         {engagementWillChange && hasAssessment && (
           <div className="bg-[var(--blue-light)] rounded-xl p-3 flex items-start gap-2">
             <span>💡</span>
@@ -261,7 +249,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
         )}
       </div>
 
-      {/* Parent Info */}
       <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
         <h3 className="font-black text-black">👨‍👧 Parent Info</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -276,7 +263,6 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
         </div>
       </div>
 
-      {/* Intake Notes */}
       <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
         <h3 className="font-black text-black">📝 Intake Notes</h3>
         <textarea className={inputClass + ' h-28'} value={form.notes_from_parent} onChange={e => update('notes_from_parent', e.target.value)} />

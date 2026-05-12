@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getStudent, getLatestAssessment, saveHomeworkSheet } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 import { runPrompt } from '../lib/claude'
 import { homeworkPrompt } from '../prompts/homeworkPrompt'
 import { bundleForHomework } from '../lib/dataHelpers'
@@ -9,8 +10,8 @@ import LoadingState from '../components/LoadingState.jsx'
 export default function HomeworkSheet() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const student = getStudent(id)
-  const assessment = getLatestAssessment(id)
+  const { data: student, loading: l1 } = useAsync(() => getStudent(id), [id])
+  const { data: assessment, loading: l2 } = useAsync(() => getLatestAssessment(id), [id])
 
   const [sheet, setSheet] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -22,7 +23,7 @@ export default function HomeworkSheet() {
     setLoading(true)
     setError(null)
     try {
-      const bundle = bundleForHomework(id)
+      const bundle = await bundleForHomework(id)
       const result = await runPrompt({ systemPrompt: homeworkPrompt, userMessage: bundle })
       setSheet(JSON.parse(result))
       setSaved(false)
@@ -33,9 +34,8 @@ export default function HomeworkSheet() {
     }
   }
 
-  // Fire one AI generation on mount. Ref guard prevents StrictMode double-fire
-  // (which would cost a second API call). Effect intentionally has no deps;
-  // re-running on student/assessment change would re-generate on every render.
+  // Fire AI generation once both student + assessment are loaded. Ref guard
+  // prevents StrictMode double-fire (which would cost a second API call).
   const generatedRef = useRef(false)
   useEffect(() => {
     if (generatedRef.current) return
@@ -44,7 +44,11 @@ export default function HomeworkSheet() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     generate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [student, assessment])
+
+  if (l1 || l2) {
+    return <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+  }
 
   if (!student || !assessment) {
     return <p className="text-center text-gray-400 py-20">Upload an assessment first.</p>
@@ -63,7 +67,7 @@ export default function HomeworkSheet() {
 
   if (!sheet) return null
 
-  function saveAssignment() {
+  async function saveAssignment() {
     const record = {
       id: crypto.randomUUID(),
       student_id: id,
@@ -78,7 +82,7 @@ export default function HomeworkSheet() {
       tutor_note_to_parent: sheet.tutor_note_to_parent || '',
       book_recommendation: sheet.book_recommendation || null,
     }
-    saveHomeworkSheet(record)
+    await saveHomeworkSheet(record)
     setSaved(true)
     navigate(`/students/${id}/homework/${record.id}`)
   }

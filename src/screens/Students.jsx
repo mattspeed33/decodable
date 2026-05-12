@@ -1,12 +1,20 @@
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getLatestAnalysis, getAllSessions } from '../lib/storage'
+import { getStudents, getAllSessions, getAllAnalyses } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 
 const gradeEmoji = { 'K': '🌱', '1st': '🌿', '2nd': '🌳', '3rd': '🏆' }
 
 export default function Students() {
   const navigate = useNavigate()
-  const students = getStudents()
-  const allSessions = getAllSessions()
+  const { data: students = [], loading } = useAsync(() => getStudents())
+  const { data: allSessions = [] } = useAsync(() => getAllSessions())
+  const { data: allAnalyses = [] } = useAsync(() => getAllAnalyses())
+
+  // Latest analysis per student. The list is already sorted by date desc.
+  const latestByStudent = {}
+  for (const a of allAnalyses) {
+    if (!latestByStudent[a.student_id]) latestByStudent[a.student_id] = a
+  }
 
   return (
     <div>
@@ -20,7 +28,9 @@ export default function Students() {
         </button>
       </div>
 
-      {students.length === 0 ? (
+      {loading ? (
+        <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+      ) : students.length === 0 ? (
         <div className="text-center py-20">
           <span className="text-6xl block mb-4">📚</span>
           <p className="text-gray-500 text-lg font-bold mb-1">No students yet</p>
@@ -29,7 +39,7 @@ export default function Students() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {students.map(s => {
-            const a = getLatestAnalysis(s.id)
+            const a = latestByStudent[s.id]
             const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
             const ufli = a?.ai_analysis?.ufli_placement
             const sessCount = allSessions.filter(ses => ses.student_id === s.id).length

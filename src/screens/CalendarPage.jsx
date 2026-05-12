@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getAllSessions, getScheduledSessions, getLatestAnalysis } from '../lib/storage'
+import { getStudents, getAllSessions, getScheduledSessions, getAllAnalyses } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DAY_NAME_TO_NUM = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 }
@@ -63,9 +64,16 @@ export default function CalendarPage() {
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [hoveredEvent, setHoveredEvent] = useState(null)
 
-  const students = getStudents()
-  const allSessions = getAllSessions()
-  const manualScheduled = getScheduledSessions()
+  const { data: students = [] } = useAsync(() => getStudents())
+  const { data: allSessions = [] } = useAsync(() => getAllSessions())
+  const { data: manualScheduled = [] } = useAsync(() => getScheduledSessions())
+  const { data: allAnalyses = [] } = useAsync(() => getAllAnalyses())
+
+  const latestAnalysisByStudent = useMemo(() => {
+    const m = {}
+    for (const a of allAnalyses) if (!m[a.student_id]) m[a.student_id] = a
+    return m
+  }, [allAnalyses])
 
   const { firstDay, daysInMonth } = getMonthData(viewYear, viewMonth)
   const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -129,7 +137,7 @@ export default function CalendarPage() {
   }
 
   function getStudentFocus(studentId) {
-    const a = getLatestAnalysis(studentId)
+    const a = latestAnalysisByStudent[studentId]
     if (!a?.ai_analysis) return null
     const arc = (a.ai_analysis.week_arc || a.ai_analysis.four_week_arc)
     if (!arc?.length) return a.ai_analysis.ufli_placement?.current_unit_name || null

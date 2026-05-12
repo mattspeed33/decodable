@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { saveAnalysis, getStudent } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 
 export default function AnalysisResult() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const student = getStudent(id)
+  const { data: student } = useAsync(() => getStudent(id), [id])
   const [data] = useState(() => {
     const raw = sessionStorage.getItem('decodable_pending_analysis')
     return raw ? JSON.parse(raw) : null
@@ -23,7 +24,7 @@ export default function AnalysisResult() {
 
   const a = data.ai_analysis
 
-  function handleSave() {
+  async function handleSave() {
     const analysis = {
       id: crypto.randomUUID(),
       student_id: data.student_id,
@@ -32,7 +33,7 @@ export default function AnalysisResult() {
       ai_analysis: data.ai_analysis,
       created_at: new Date().toISOString(),
     }
-    saveAnalysis(analysis)
+    await saveAnalysis(analysis)
     sessionStorage.removeItem('decodable_pending_analysis')
     navigate(`/students/${id}`)
   }
@@ -182,7 +183,7 @@ export default function AnalysisResult() {
         <button onClick={handleSave} className="flex-1 bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
           ✓ Save
         </button>
-        <button onClick={() => { handleSave(); navigate(`/students/${id}/session`); }} className="flex-1 bg-white border-2 border-gray-100 py-3.5 rounded-full font-bold text-black hover:border-[var(--primary)] transition">
+        <button onClick={async () => { await handleSave(); navigate(`/students/${id}/session`); }} className="flex-1 bg-white border-2 border-gray-100 py-3.5 rounded-full font-bold text-black hover:border-[var(--primary)] transition">
           📋 Save & Plan
         </button>
         <button onClick={handleDiscard} className="bg-white border-2 border-gray-100 py-3.5 px-5 rounded-full text-sm text-gray-400 font-bold hover:border-[var(--red)] hover:text-[var(--red)] transition">

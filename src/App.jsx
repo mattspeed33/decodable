@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { SignedIn, SignedOut, SignIn } from '@clerk/clerk-react'
 import { runMigration } from './lib/migration'
+import { maybeMigrateOnce } from './lib/firstRunMigration'
 
 runMigration()
+
 import NavBar from './components/NavBar.jsx'
 import Dashboard from './screens/Dashboard.jsx'
 import Students from './screens/Students.jsx'
@@ -17,6 +20,55 @@ import AssessmentTemplateDetail from './screens/AssessmentTemplateDetail.jsx'
 import HomeworkInbox from './screens/HomeworkInbox.jsx'
 import CalendarPage from './screens/CalendarPage.jsx'
 
+// Runs the one-shot localStorage → server migration after sign-in, before the
+// rest of the app renders. The server is the source of truth from here on, so
+// we must finish (or fail-and-continue) before any screen tries to read.
+function MigrationGate({ children }) {
+  const [ready, setReady] = useState(false)
+  const [imported, setImported] = useState(null)
+
+  useEffect(() => {
+    maybeMigrateOnce()
+      .then(({ migrated, counts }) => {
+        if (migrated && Object.keys(counts).length > 0) setImported(counts)
+        setReady(true)
+      })
+      .catch(err => {
+        console.error('First-run migration failed:', err)
+        setReady(true)
+      })
+  }, [])
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+        <p className="text-sm text-gray-400 font-bold">Preparing your account…</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {imported && <ImportBanner counts={imported} onDismiss={() => setImported(null)} />}
+      {children}
+    </>
+  )
+}
+
+function ImportBanner({ counts, onDismiss }) {
+  const lines = Object.entries(counts).map(([slug, n]) => `${n} ${slug.replace('-', ' ')}`).join(' · ')
+  return (
+    <div className="fixed top-4 right-4 left-60 z-50 bg-[var(--green-light)] border-2 border-green-200 rounded-2xl p-4 flex items-center gap-3 shadow-md">
+      <span className="text-2xl">✨</span>
+      <div className="flex-1">
+        <p className="text-sm font-black text-[var(--green)]">Imported your existing data</p>
+        <p className="text-xs text-gray-600">{lines}</p>
+      </div>
+      <button onClick={onDismiss} className="text-xs font-bold text-gray-400 hover:text-black">Dismiss</button>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <>
@@ -26,27 +78,29 @@ export default function App() {
         </div>
       </SignedOut>
       <SignedIn>
-        <BrowserRouter>
-          <div className="min-h-screen bg-[var(--bg)]">
-            <NavBar />
-            <main className="ml-56 max-w-4xl px-10 py-8">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/students" element={<Students />} />
-                <Route path="/students/new" element={<NewStudent />} />
-                <Route path="/students/:id" element={<StudentPage />} />
-                <Route path="/students/:id/analysis" element={<AnalysisResult />} />
-                <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
-                <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/templates" element={<AssessmentTemplates />} />
-                <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
-                <Route path="/homework" element={<HomeworkInbox />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </main>
-          </div>
-        </BrowserRouter>
+        <MigrationGate>
+          <BrowserRouter>
+            <div className="min-h-screen bg-[var(--bg)]">
+              <NavBar />
+              <main className="ml-56 max-w-4xl px-10 py-8">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/students" element={<Students />} />
+                  <Route path="/students/new" element={<NewStudent />} />
+                  <Route path="/students/:id" element={<StudentPage />} />
+                  <Route path="/students/:id/analysis" element={<AnalysisResult />} />
+                  <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
+                  <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
+                  <Route path="/templates" element={<AssessmentTemplates />} />
+                  <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
+                  <Route path="/homework" element={<HomeworkInbox />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </main>
+            </div>
+          </BrowserRouter>
+        </MigrationGate>
       </SignedIn>
     </>
   )

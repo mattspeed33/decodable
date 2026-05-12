@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession, saveAnalysis } from '../../lib/storage'
+import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { sessionPrompt } from '../../prompts/sessionPrompt'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
@@ -96,19 +97,19 @@ const blockColors = {
 }
 
 export default function SessionsTab({ studentId, onRefresh }) {
-  const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
-  const lastSession = getLatestSession(studentId)
-  const allSessions = getSessions(studentId)
-  const allAssessments = getAssessments(studentId)
-  const latestAnalysis = getLatestAnalysis(studentId)
+  const { data: student } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: assessment } = useAsync(() => getLatestAssessment(studentId), [studentId])
+  const { data: lastSession } = useAsync(() => getLatestSession(studentId), [studentId])
+  const { data: allSessions = [], refresh: refreshSessions } = useAsync(() => getSessions(studentId), [studentId])
+  const { data: allAssessments = [] } = useAsync(() => getAssessments(studentId), [studentId])
+  const { data: latestAnalysis } = useAsync(() => getLatestAnalysis(studentId), [studentId])
   const analysis = latestAnalysis?.ai_analysis
 
   const [mode, setMode] = useState(null)
 
   // Plan state
-  const [sessionLength, setSessionLength] = useState(student?.session_length_minutes || 50)
-  const [lastNotes, setLastNotes] = useState(lastSession?.tutor_notes || '')
+  const [sessionLength, setSessionLength] = useState(50)
+  const [lastNotes, setLastNotes] = useState('')
   const [plan, setPlan] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -117,11 +118,26 @@ export default function SessionsTab({ studentId, onRefresh }) {
   // Log state
   const [logForm, setLogForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    length_minutes: student?.session_length_minutes || 50,
+    length_minutes: 50,
     tutor_notes: '',
     what_went_well: '',
     what_needs_more_work: '',
   })
+
+  // Sync local state defaults once student/lastSession load from the server.
+  useEffect(() => {
+    if (student?.session_length_minutes) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSessionLength(student.session_length_minutes)
+      setLogForm(f => ({ ...f, length_minutes: student.session_length_minutes }))
+    }
+  }, [student?.session_length_minutes])
+  useEffect(() => {
+    if (lastSession?.tutor_notes) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLastNotes(lastSession.tutor_notes)
+    }
+  }, [lastSession?.tutor_notes])
   const [logPhotos, setLogPhotos] = useState([])
   const [logAnalyzing, setLogAnalyzing] = useState(false)
   const [logError, setLogError] = useState(null)
@@ -136,7 +152,7 @@ export default function SessionsTab({ studentId, onRefresh }) {
     setLoading(true)
     setError(null)
     try {
-      const bundle = bundleForSessionPlan(studentId, sessionLength, lastNotes)
+      const bundle = await bundleForSessionPlan(studentId, sessionLength, lastNotes)
       const result = await runPrompt({ systemPrompt: sessionPrompt, userMessage: bundle })
       setPlan(JSON.parse(result))
     } catch (err) {
@@ -146,9 +162,9 @@ export default function SessionsTab({ studentId, onRefresh }) {
     }
   }
 
-  function handleSavePlan() {
+  async function handleSavePlan() {
     const sesNum = (lastSession?.ses_number || 0)
-    saveSession({
+    await saveSession({
       id: crypto.randomUUID(),
       student_id: studentId,
       assessment_id: assessment?.id,
@@ -165,6 +181,7 @@ export default function SessionsTab({ studentId, onRefresh }) {
     setPlan(null)
     setMode(null)
     setPlanNotes({ tutor_notes: '', what_went_well: '', what_needs_more_work: '' })
+    refreshSessions()
     onRefresh?.()
   }
 
@@ -195,13 +212,13 @@ Previous sessions completed: ${allSessions.length}
           ai_analysis: parsed,
           created_at: new Date().toISOString()
         }
-        saveAnalysis(newAnalysis)
+        await saveAnalysis(newAnalysis)
         assessmentId = newAnalysis.id
       }
 
       // Save session
       const sesNum = (lastSession?.ses_number || 0)
-      saveSession({
+      await saveSession({
         id: crypto.randomUUID(),
         student_id: studentId,
         assessment_id: assessmentId,
@@ -218,6 +235,7 @@ Previous sessions completed: ${allSessions.length}
       })
 
       setLogSaved(true)
+      refreshSessions()
       onRefresh?.()
       setLogForm({ date: new Date().toISOString().split('T')[0], length_minutes: student?.session_length_minutes || 50, tutor_notes: '', what_went_well: '', what_needs_more_work: '' })
       setLogPhotos([])
@@ -585,7 +603,7 @@ Previous sessions completed: ${allSessions.length}
             {allSessions.map(session => {
               const isExpanded = expandedSession === session.id
               const sa = allAssessments.find(a => a.id === session.assessment_id)?.ai_analysis
-                || getLatestAnalysis(studentId)?.ai_analysis
+                || latestAnalysis?.ai_analysis
               const hasNotes = session.tutor_notes || session.what_went_well || session.what_needs_more_work
               return (
                 <div key={session.id} className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">

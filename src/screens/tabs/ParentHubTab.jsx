@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getStudent, getLatestAssessment, getLatestSession, getEmailLog, getHomeworkSheets, saveEmail } from '../../lib/storage'
+import { useAsync } from '../../lib/useAsync'
 import { runPrompt } from '../../lib/claude'
 import { emailPrompt } from '../../prompts/emailPrompt'
 import { bundleForEmail } from '../../lib/dataHelpers'
@@ -8,11 +9,11 @@ import LoadingState from '../../components/LoadingState.jsx'
 
 export default function ParentHubTab({ studentId }) {
   const navigate = useNavigate()
-  const student = getStudent(studentId)
-  const assessment = getLatestAssessment(studentId)
-  const lastSession = getLatestSession(studentId)
-  const emails = getEmailLog(studentId)
-  const homework = getHomeworkSheets(studentId)
+  const { data: student } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: assessment } = useAsync(() => getLatestAssessment(studentId), [studentId])
+  const { data: lastSession } = useAsync(() => getLatestSession(studentId), [studentId])
+  const { data: emails = [], refresh: refreshEmails } = useAsync(() => getEmailLog(studentId), [studentId])
+  const { data: homework = [] } = useAsync(() => getHomeworkSheets(studentId), [studentId])
 
   const [section, setSection] = useState('email')
   const [notes, setNotes] = useState('')
@@ -27,7 +28,7 @@ export default function ParentHubTab({ studentId }) {
     setLoading(true)
     setError(null)
     try {
-      const bundle = bundleForEmail(studentId, notes)
+      const bundle = await bundleForEmail(studentId, notes)
       const result = await runPrompt({ systemPrompt: emailPrompt, userMessage: bundle })
       setEmail(JSON.parse(result))
     } catch (err) {
@@ -47,8 +48,8 @@ export default function ParentHubTab({ studentId }) {
     window.open(`mailto:${student.parent_email}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`)
   }
 
-  function handleSaveEmail() {
-    saveEmail({
+  async function handleSaveEmail() {
+    await saveEmail({
       id: crypto.randomUUID(),
       student_id: studentId,
       session_number: lastSession?.ses_number || 1,
@@ -59,6 +60,7 @@ export default function ParentHubTab({ studentId }) {
       created_at: new Date().toISOString()
     })
     setSavedEmail(true)
+    refreshEmails()
   }
 
   if (!student || !assessment) {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getStudent, getAssessments, getAnalyses, getSessions, saveAssessment, deleteAssessment } from '../../lib/storage'
+import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
 import { serializeFormData } from '../../lib/assessmentFormSchemas'
@@ -36,10 +37,11 @@ function getAssessmentSummary(assessment) {
 
 export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }) {
   const navigate = useNavigate()
-  const student = getStudent(studentId)
-  const sessions = getSessions(studentId)
+  const { data: student } = useAsync(() => getStudent(studentId), [studentId])
+  const { data: sessions = [] } = useAsync(() => getSessions(studentId), [studentId])
+  const { data: assessments = [], refresh: refreshAssessments } = useAsync(() => getAssessments(studentId), [studentId])
+  const { data: analyses = [] } = useAsync(() => getAnalyses(studentId), [studentId])
 
-  const assessments = getAssessments(studentId)
   const startWithIntake = autoStartIntake && assessments.length === 0
   const [view, setView] = useState(startWithIntake ? 'form' : 'list')
   const [selectedCategory, setSelectedCategory] = useState(startWithIntake ? 'intake-snapshot' : null)
@@ -49,9 +51,6 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [saved, setSaved] = useState(false)
-  const [, forceUpdate] = useState(0)
-
-  const analyses = getAnalyses(studentId)
 
   function handleCategorySelected(categoryId) {
     setSelectedCategory(categoryId)
@@ -82,13 +81,13 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
       created_at: editingAssessment?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    saveAssessment(assessment)
+    await saveAssessment(assessment)
     setView('list')
     setSelectedCategory(null)
     setEditingAssessment(null)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
-    forceUpdate(n => n + 1)
+    refreshAssessments()
     onRefresh?.()
   }
 
@@ -254,7 +253,7 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
                       ✏️
                     </button>
                     <button
-                      onClick={() => { if (confirm('Delete this assessment?')) { deleteAssessment(assessment.id); forceUpdate(n => n + 1); onRefresh?.() } }}
+                      onClick={async () => { if (confirm('Delete this assessment?')) { await deleteAssessment(assessment.id); refreshAssessments(); onRefresh?.() } }}
                       className="text-[10px] font-bold text-gray-300 hover:text-[var(--red)] transition px-1"
                     >
                       🗑️

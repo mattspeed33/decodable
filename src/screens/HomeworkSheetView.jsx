@@ -1,12 +1,17 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { getHomeworkSheet, getStudent } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 import StudentTabs from '../components/StudentTabs.jsx'
 
 export default function HomeworkSheetView() {
   const navigate = useNavigate()
   const { id, sheetId } = useParams()
-  const student = getStudent(id)
-  const sheet = getHomeworkSheet(sheetId)
+  const { data: student, loading: l1 } = useAsync(() => getStudent(id), [id])
+  const { data: sheet, loading: l2 } = useAsync(() => getHomeworkSheet(sheetId), [sheetId])
+
+  if (l1 || l2) {
+    return <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+  }
 
   if (!student || !sheet || sheet.student_id !== id) {
     return <p className="text-center text-gray-400 py-20">Homework sheet not found.</p>

@@ -24,7 +24,7 @@ export default function NewStudent() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const student = {
       ...form,
@@ -40,7 +40,7 @@ export default function NewStudent() {
       },
       created_at: new Date().toISOString()
     }
-    saveStudent(student)
+    await saveStudent(student)
     navigate(`/students/${student.id}`)
   }
 

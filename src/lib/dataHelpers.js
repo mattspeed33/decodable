@@ -2,13 +2,15 @@ import {
   getStudent,
   getLatestAnalysis,
   getLatestSession,
-  getLatestEmailSummary
+  getLatestEmailSummary,
 } from './storage'
 
-export function bundleForSessionPlan(studentId, sessionLength, lastNotes) {
-  const student = getStudent(studentId)
-  const analysis = getLatestAnalysis(studentId)
-  const lastSession = getLatestSession(studentId)
+export async function bundleForSessionPlan(studentId, sessionLength, lastNotes) {
+  const [student, analysis, lastSession] = await Promise.all([
+    getStudent(studentId),
+    getLatestAnalysis(studentId),
+    getLatestSession(studentId),
+  ])
   const a = analysis?.ai_analysis
 
   return `
@@ -36,11 +38,13 @@ ${lastNotes || lastSession?.tutor_notes || 'No previous session notes — this i
   `.trim()
 }
 
-export function bundleForEmail(studentId, sessionNotes) {
-  const student = getStudent(studentId)
-  const analysis = getLatestAnalysis(studentId)
-  const lastSession = getLatestSession(studentId)
-  const lastEmailSummary = getLatestEmailSummary(studentId)
+export async function bundleForEmail(studentId, sessionNotes) {
+  const [student, analysis, lastSession, lastEmailSummary] = await Promise.all([
+    getStudent(studentId),
+    getLatestAnalysis(studentId),
+    getLatestSession(studentId),
+    getLatestEmailSummary(studentId),
+  ])
   const a = analysis?.ai_analysis
 
   return `
@@ -63,9 +67,11 @@ ${lastEmailSummary || 'This is the first parent email for this student.'}
   `.trim()
 }
 
-export function bundleForHomework(studentId) {
-  const student = getStudent(studentId)
-  const analysis = getLatestAnalysis(studentId)
+export async function bundleForHomework(studentId) {
+  const [student, analysis] = await Promise.all([
+    getStudent(studentId),
+    getLatestAnalysis(studentId),
+  ])
   const a = analysis?.ai_analysis
 
   return `

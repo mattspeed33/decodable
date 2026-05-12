@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getHomeworkSheets, getStudents, getStudent } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 
 
 export default function HomeworkInbox({ studentId }) {
@@ -8,9 +8,9 @@ export default function HomeworkInbox({ studentId }) {
   const params = useParams()
   const id = studentId || params.id
 
-  const student = id ? getStudent(id) : null
-  const students = getStudents()
-  const sheets = useMemo(() => getHomeworkSheets(id || null), [id])
+  const { data: student } = useAsync(() => id ? getStudent(id) : Promise.resolve(null), [id])
+  const { data: students = [] } = useAsync(() => getStudents())
+  const { data: sheets = [] } = useAsync(() => getHomeworkSheets(id || null), [id])
 
   return (
     <div className="space-y-6">

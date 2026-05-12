@@ -1,24 +1,36 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStudents, getAllSessions, getLatestAnalysis, getReportCards } from '../lib/storage'
+import { getStudents, getAllSessions, getAllAnalyses, getAllReportCards } from '../lib/storage'
+import { useAsync } from '../lib/useAsync'
 import { GRADE_LEVELS, EXPECTED_LEVEL, getStatus, getLevelPercent } from '../lib/gradeLevels'
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const students = getStudents()
-  const allSessions = useMemo(() => getAllSessions(), [])
+  const { data: students = [], loading } = useAsync(() => getStudents())
+  const { data: allSessions = [] } = useAsync(() => getAllSessions())
+  const { data: allAnalyses = [] } = useAsync(() => getAllAnalyses())
+  const { data: allReportCards = [] } = useAsync(() => getAllReportCards())
 
-  // Stats
+  const latestAnalysisByStudent = useMemo(() => {
+    const m = {}
+    for (const a of allAnalyses) if (!m[a.student_id]) m[a.student_id] = a
+    return m
+  }, [allAnalyses])
+
+  const latestReportByStudent = useMemo(() => {
+    const m = {}
+    for (const r of allReportCards) if (!m[r.student_id]) m[r.student_id] = r
+    return m
+  }, [allReportCards])
+
   const totalStudents = students.length
 
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const sessionsThisWeek = allSessions.filter(s => new Date(s.date) >= sevenDaysAgo).length
 
-  // Per-student grade-level data from latest report card
   const studentLevels = students.map(s => {
-    const reports = getReportCards(s.id)
-    const latest = reports[0]
+    const latest = latestReportByStudent[s.id]
     if (!latest?.skillLevels) return { student: s, skills: null, statusCounts: null }
 
     const filled = Object.entries(latest.skillLevels).filter(([, v]) => v && v !== 'not-assessed')
@@ -41,7 +53,6 @@ export default function Dashboard() {
   const studentsWithData = studentLevels.filter(s => s.skills)
   const totalAhead = studentsWithData.reduce((sum, s) => sum + (s.statusCounts?.ahead || 0), 0)
 
-  // Sessions per day (last 7 days) for bar chart
   const dailySessions = useMemo(() => {
     const today = new Date()
     const days = []
@@ -56,6 +67,10 @@ export default function Dashboard() {
   }, [allSessions])
 
   const maxDailySessions = Math.max(...dailySessions.map(d => d.count), 1)
+
+  if (loading) {
+    return <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+  }
 
   if (totalStudents === 0) {
     return (
@@ -84,7 +99,6 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* ── STAT CARDS ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon="👩‍🎓" value={totalStudents} label="Students" color="var(--primary)" />
         <StatCard icon="🗓️" value={sessionsThisWeek} label="Sessions (7d)" color="var(--blue)" />
@@ -92,7 +106,6 @@ export default function Dashboard() {
         <StatCard icon="🟢" value={studentsWithData.length > 0 ? `${totalAhead}` : '—'} label="Skills Ahead" color="var(--green)" />
       </div>
 
-      {/* ── SESSIONS THIS WEEK BAR CHART ── */}
       <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
         <h3 className="font-black text-black mb-4">📊 Sessions This Week</h3>
         <div className="flex items-end gap-2 h-32">
@@ -110,7 +123,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── STUDENT GRADE LEVEL OVERVIEW ── */}
       {studentsWithData.length > 0 && (
         <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
           <h3 className="font-black text-black mb-4">📊 Student Reading Levels</h3>
@@ -144,7 +156,6 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </div>
-                  {/* Grade-level bar */}
                   <div className="relative">
                     <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
                       {avgPct > 0 && (
@@ -154,7 +165,6 @@ export default function Dashboard() {
                         />
                       )}
                     </div>
-                    {/* Expected level marker */}
                     {expectedPct > 0 && (
                       <div
                         className="absolute top-0 h-3 w-0.5 bg-black opacity-30"
@@ -167,7 +177,6 @@ export default function Dashboard() {
                       ))}
                     </div>
                   </div>
-                  {/* Status badges */}
                   <div className="flex gap-2 mt-1">
                     {sl.statusCounts.ahead > 0 && (
                       <span className="text-[9px] font-bold" style={{ color: 'var(--green)' }}>🟢 {sl.statusCounts.ahead}</span>
@@ -193,12 +202,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── STUDENT LIST ── */}
       <div>
         <h3 className="font-black text-black mb-3">👩‍🎓 Students</h3>
         <div className="space-y-2">
           {students.map(s => {
-            const a = getLatestAnalysis(s.id)
+            const a = latestAnalysisByStudent[s.id]
             const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
             const ufli = a?.ai_analysis?.ufli_placement?.current_working_unit
             const sessCount = allSessions.filter(ses => ses.student_id === s.id).length
