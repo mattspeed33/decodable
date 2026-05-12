@@ -15,7 +15,18 @@
       "Bash(git -C /Users/mattwetmore/Documents/Decodable commit -m ' *)",
       "Bash(git -C /Users/mattwetmore/Documents/Decodable push origin main)",
       "Bash(npm run *)",
-      "Bash(git -C /Users/mattwetmore/Documents/Decodable add -A)"
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable add -A)",
+      "Bash(curl -sI https://decodable.vercel.app/api/assessments)",
+      "Bash(curl -s https://decodable.vercel.app/api/assessments)",
+      "Bash(curl -sI https://decodable.vercel.app/api/students)",
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable add api)",
+      "Bash(curl -s https://decodable.vercel.app/api/_health)",
+      "Bash(curl -sI \"https://decodable.vercel.app/api/assessments\")",
+      "Bash(curl -s \"https://decodable.vercel.app/api/assessments\")",
+      "Bash(git -C /Users/mattwetmore/Documents/Decodable ls-files api/)",
+      "Bash(curl -sI \"https://decodable.vercel.app/api/assessments/test123\")",
+      "Bash(curl -s \"https://decodable.vercel.app/api/assessments/test123\")",
+      "Bash(curl -sI \"https://decodable.vercel.app/api/assessments/test123/foo\")"
     ]
   }
 }
