@@ -70,9 +70,9 @@ function ImportBanner({ counts, onDismiss }) {
 // every route except the V4 student view, which takes over the full viewport.
 function DefaultLayout() {
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen bg-[var(--v4-bg)]">
       <NavBar />
-      <main className="ml-56 max-w-4xl px-10 py-8">
+      <main className="ml-[220px] max-w-6xl px-8 py-7">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/students" element={<Students />} />

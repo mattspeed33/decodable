@@ -11,6 +11,10 @@ import {
 } from '../lib/storage'
 import { useAsync } from '../lib/useAsync'
 import { GRADE_LEVELS, getStatus } from '../lib/gradeLevels'
+import {
+  Section, SectionHead, ListTable, ListRow, EmptyRow, HighlightCard,
+  BtnPrimary, BtnSecondary,
+} from '../components/v4/primitives.jsx'
 
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
@@ -264,12 +268,8 @@ function StudentHeader({ student, reportCards, onEmailParent, onPlanSession }) {
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <button onClick={onEmailParent} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--v4-surface)] border border-[var(--v4-border)] text-[12.5px] font-medium text-[var(--v4-ink-2)] hover:bg-[var(--v4-surface-3)]">
-          <Mail className="w-3.5 h-3.5" /> Email Parent
-        </button>
-        <button onClick={onPlanSession} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--v4-ink)] text-white text-[12.5px] font-semibold hover:bg-black">
-          <ClipboardList className="w-3.5 h-3.5" /> Plan Next Session
-        </button>
+        <BtnSecondary onClick={onEmailParent}><Mail className="w-3.5 h-3.5" /> Email Parent</BtnSecondary>
+        <BtnPrimary onClick={onPlanSession}><ClipboardList className="w-3.5 h-3.5" /> Plan Next Session</BtnPrimary>
       </div>
     </div>
   )
@@ -420,7 +420,7 @@ function OverviewTab({ student, latestAnalysis, analyses, assessments, sessions,
       />
 
       {/* RECENT ASSESSMENTS */}
-      <Section title="Recent Assessments" onSeeAll={() => setActiveTab('assessments')}>
+      <Section title="Recent Assessments" action="View all →" onAction={() => setActiveTab('assessments')}>
         {assessments.length === 0 ? (
           <EmptyRow icon={<ClipboardList className="w-4 h-4" />} text="No assessments yet." />
         ) : (
@@ -442,7 +442,7 @@ function OverviewTab({ student, latestAnalysis, analyses, assessments, sessions,
       </Section>
 
       {/* RECENT ACTIVITY */}
-      <Section title="Recent Activity">
+      <Section title="Recent Activity">{/* no see-all yet */}
         {activity.length === 0 ? (
           <EmptyRow icon={<Camera className="w-4 h-4" />} text="No activity yet." />
         ) : (
@@ -562,95 +562,6 @@ function Highlights({ student, latestAnalysis, emails, reportCards }) {
           }
         />
       </div>
-    </div>
-  )
-}
-
-function HighlightCard({ icon, label, value, sub }) {
-  return (
-    <div className="bg-[var(--v4-surface)] border border-[var(--v4-border)] rounded-[10px] px-3.5 py-3 flex flex-col gap-1 cursor-pointer transition-colors hover:border-[var(--v4-border-2)]">
-      <div className="text-[10.5px] font-medium text-[var(--v4-ink-3)] flex items-center gap-1.5">
-        {icon} {label}
-      </div>
-      <div className="text-[15px] font-bold text-[var(--v4-ink)] tracking-[-0.2px] mt-0.5 flex items-center gap-1.5 min-w-0">
-        {value}
-      </div>
-      <div className="text-[11px] text-[var(--v4-ink-3)]">{sub}</div>
-    </div>
-  )
-}
-
-// ─── LIST PRIMITIVES ─────────────────────────────────────────────────────────
-
-function SectionHead({ title, onSeeAll }) {
-  return (
-    <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2.5">
-      <span>{title}</span>
-      {onSeeAll && (
-        <button onClick={onSeeAll} className="ml-auto text-[11.5px] text-[var(--v4-ink-2)] normal-case tracking-normal font-medium hover:text-[var(--v4-ink)] cursor-pointer">
-          View all →
-        </button>
-      )}
-    </div>
-  )
-}
-
-function Section({ title, onSeeAll, children }) {
-  return (
-    <div>
-      <SectionHead title={title} onSeeAll={onSeeAll} />
-      {children}
-    </div>
-  )
-}
-
-function ListTable({ children }) {
-  return (
-    <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] overflow-hidden">
-      {children}
-    </div>
-  )
-}
-
-const TONE_CLASSES = {
-  purple: 'bg-[var(--v4-purple-lt)] text-[var(--v4-purple)]',
-  blue:   'bg-[var(--v4-blue-lt)] text-[var(--v4-blue)]',
-  green:  'bg-[var(--v4-green-lt)] text-[var(--v4-green)]',
-  amber:  'bg-[var(--v4-amber-lt)] text-[var(--v4-amber)]',
-  teal:   'bg-[var(--v4-teal-lt)] text-[var(--v4-teal)]',
-  gray:   'bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]',
-}
-
-function ListRow({ icon, iconTone = 'gray', title, tag, sub, date, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className="grid items-center gap-3 px-3.5 py-2.5 border-b border-[var(--v4-border)] last:border-b-0 cursor-pointer hover:bg-[var(--v4-surface-2)]"
-      style={{ gridTemplateColumns: '28px 1fr auto auto' }}
-    >
-      <div className={`w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px] ${TONE_CLASSES[iconTone]}`}>
-        {icon}
-      </div>
-      <div className="flex flex-col gap-px min-w-0">
-        <div className="text-[13px] font-medium text-[var(--v4-ink)] flex items-center gap-1.5 min-w-0">
-          <span className="truncate">{title}</span>
-          {tag && (
-            <span className={`shrink-0 text-[10.5px] font-semibold px-1.5 py-0.5 rounded ${TONE_CLASSES[tag.tone]}`}>{tag.text}</span>
-          )}
-        </div>
-        {sub && <div className="text-[11.5px] text-[var(--v4-ink-3)] truncate">{sub}</div>}
-      </div>
-      <div />
-      <div className="text-[11.5px] text-[var(--v4-ink-3)] whitespace-nowrap">{date}</div>
-    </div>
-  )
-}
-
-function EmptyRow({ icon, text }) {
-  return (
-    <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-5 flex items-center gap-2.5 text-[13px] text-[var(--v4-ink-3)]">
-      <span className="w-7 h-7 rounded-md bg-[var(--v4-surface-3)] flex items-center justify-center text-[var(--v4-ink-3)]">{icon}</span>
-      {text}
     </div>
   )
 }

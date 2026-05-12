@@ -1,29 +1,23 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { UserButton, useUser } from '@clerk/clerk-react'
+import {
+  Home, Users, Calendar, Library, Pencil, Settings as SettingsIcon,
+} from 'lucide-react'
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: '🏠' },
-  { path: '/students', label: 'Students', icon: '👩‍🎓' },
-  { path: '/calendar', label: 'Calendar', icon: '📅' },
-  { path: '/templates', label: 'Assessment Library', icon: '📋' },
-  { path: '/homework', label: 'Homework', icon: '✏️' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
+  { path: '/',          label: 'Home',      Icon: Home },
+  { path: '/students',  label: 'Students',  Icon: Users },
+  { path: '/calendar',  label: 'This Week', Icon: Calendar },
+  { path: '/homework',  label: 'Homework',  Icon: Pencil },
+  { path: '/templates', label: 'Library',   Icon: Library },
+  { path: '/settings',  label: 'Settings',  Icon: SettingsIcon },
 ]
-
-function UserMenu() {
-  const { user } = useUser()
-  const label = user?.primaryEmailAddress?.emailAddress || user?.username || 'Account'
-  return (
-    <div className="flex items-center gap-2 px-1">
-      <UserButton afterSignOutUrl="/" />
-      <span className="text-xs text-gray-500 truncate" title={label}>{label}</span>
-    </div>
-  )
-}
 
 export default function NavBar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useUser()
+  const label = user?.primaryEmailAddress?.emailAddress || user?.username || 'Account'
 
   function isActive(path) {
     if (path === '/') return location.pathname === '/'
@@ -31,38 +25,44 @@ export default function NavBar() {
   }
 
   return (
-    <aside className="navbar fixed left-0 top-0 h-screen w-56 bg-white border-r border-gray-100 flex flex-col z-10">
-      <div className="px-5 py-6 border-b border-gray-100">
-        <h1
-          className="text-2xl font-black text-black cursor-pointer tracking-tight flex items-center gap-2"
+    <aside className="navbar bg-[var(--v4-surface-2)] border-r border-[var(--v4-border)] px-2.5 py-3.5 flex flex-col gap-0.5 overflow-y-auto h-screen fixed left-0 top-0 w-[220px] z-20">
+      <div className="flex items-center gap-2.5 px-2.5 pt-1 pb-4 mb-2">
+        <div
           onClick={() => navigate('/')}
+          className="w-7 h-7 rounded-md flex items-center justify-center text-sm cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #86efac, #16a34a)' }}
         >
-          <span className="text-3xl">📖</span> decodable
-        </h1>
+          🌱
+        </div>
+        <div
+          onClick={() => navigate('/')}
+          className="text-[14.5px] font-bold tracking-[-0.3px] cursor-pointer text-[var(--v4-ink)]"
+        >
+          Decodable
+        </div>
       </div>
 
-      <nav className="flex-1 px-3 pt-4 space-y-1">
-        {navItems.map(item => (
+      {navItems.map(({ path, label, Icon }) => {
+        const active = isActive(path)
+        return (
           <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2.5 ${
-              isActive(item.path)
-                ? 'bg-[var(--primary-light)] text-[var(--primary)]'
-                : 'text-gray-400 hover:text-black hover:bg-gray-50'
+            key={path}
+            onClick={() => navigate(path)}
+            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium cursor-pointer text-left ${
+              active
+                ? 'bg-[var(--v4-surface)] text-[var(--v4-ink)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+                : 'text-[var(--v4-ink-2)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]'
             }`}
           >
-            <span className="text-lg">{item.icon}</span>
-            {item.label}
+            <Icon className="w-[14px] h-[14px]" strokeWidth={2} />
+            {label}
           </button>
-        ))}
-      </nav>
+        )
+      })}
 
-      <div className="px-4 py-4 border-t border-gray-100 space-y-3">
-        <UserMenu />
-        <div className="bg-[var(--gold-light)] rounded-xl p-3 text-center">
-          <p className="text-xs font-bold text-[var(--orange)]">🔥 Keep teaching!</p>
-        </div>
+      <div className="mt-auto pt-3 border-t border-[var(--v4-border)] flex items-center gap-2 px-2">
+        <UserButton afterSignOutUrl="/" />
+        <span className="text-[11px] text-[var(--v4-ink-3)] truncate" title={label}>{label}</span>
       </div>
     </aside>
   )
