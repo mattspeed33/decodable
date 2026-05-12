@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react'
+import { Download, Upload, Trash2, Save, ExternalLink } from 'lucide-react'
+import { BtnPrimary, BtnSecondary, Card } from '../components/v4/primitives.jsx'
 
 const STORAGE_KEY = 'decodable_settings'
 const ALL_STORAGE_KEYS = [
@@ -20,23 +22,23 @@ function getSettings() {
 }
 
 const defaults = {
-  // Profile
   tutor_name: '',
   tutor_email: '',
   business_name: '',
-  // Session Defaults
   default_session_length: 50,
   default_session_type: '1:1',
   default_total_sessions: 4,
-  // Homework Preferences
   default_homework_length: 20,
   include_word_bank: true,
   include_bonus_challenge: true,
-  // Parent Email Defaults
   email_signoff_name: '',
   email_tone: 'warm',
   auto_include_homework_summary: true,
 }
+
+const INPUT = 'w-full border border-[var(--v4-border)] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)]'
+const LABEL = 'block text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1'
+const SECTION_LABEL = 'text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]'
 
 export default function Settings() {
   const [settings, setSettings] = useState(() => ({ ...defaults, ...getSettings() }))
@@ -86,7 +88,6 @@ export default function Settings() {
           }
         })
         setImportStatus(`Imported ${count} data sections. Refresh to see changes.`)
-        // Reload settings
         const stored = getSettings()
         setSettings(s => ({ ...s, ...stored }))
       } catch {
@@ -104,56 +105,48 @@ export default function Settings() {
     window.location.reload()
   }
 
-  const inputClass = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent bg-white'
-  const labelClass = 'block text-sm font-bold text-black mb-1'
-  const sectionClass = 'bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4'
-
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-3xl font-black text-black tracking-tight mb-8">⚙️ Settings</h2>
+    <div className="max-w-2xl space-y-5">
+      <h2 className="text-[22px] font-bold text-[var(--v4-ink)] tracking-[-0.5px]">Settings</h2>
 
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* ── PROFILE ── */}
-        <div className={sectionClass}>
-          <h3 className="font-black text-black text-sm flex items-center gap-2">👤 Profile</h3>
-
+      <form onSubmit={handleSave} className="space-y-4">
+        {/* PROFILE */}
+        <Card className="space-y-3">
+          <p className={SECTION_LABEL}>Profile</p>
           <div>
-            <label className={labelClass}>Tutor Name</label>
-            <input className={inputClass} value={settings.tutor_name} onChange={e => update('tutor_name', e.target.value)} placeholder="Sarah" />
+            <label className={LABEL}>Tutor name</label>
+            <input className={INPUT} value={settings.tutor_name} onChange={e => update('tutor_name', e.target.value)} placeholder="Sarah" />
           </div>
-
           <div>
-            <label className={labelClass}>Tutor Email</label>
-            <input className={inputClass} type="email" value={settings.tutor_email} onChange={e => update('tutor_email', e.target.value)} placeholder="sarah@example.com" />
+            <label className={LABEL}>Tutor email</label>
+            <input className={INPUT} type="email" value={settings.tutor_email} onChange={e => update('tutor_email', e.target.value)} placeholder="sarah@example.com" />
           </div>
-
           <div>
-            <label className={labelClass}>Business / Practice Name <span className="text-gray-400 font-normal">(optional)</span></label>
-            <input className={inputClass} value={settings.business_name} onChange={e => update('business_name', e.target.value)} placeholder="Bright Readers Tutoring" />
+            <label className={LABEL}>Business / practice name (optional)</label>
+            <input className={INPUT} value={settings.business_name} onChange={e => update('business_name', e.target.value)} placeholder="Bright Readers Tutoring" />
           </div>
-        </div>
+        </Card>
 
-        {/* ── SESSION DEFAULTS ── */}
-        <div className={sectionClass}>
-          <h3 className="font-black text-black text-sm flex items-center gap-2">🗓️ Session Defaults</h3>
-
-          <div className="grid grid-cols-3 gap-4">
+        {/* SESSION DEFAULTS */}
+        <Card className="space-y-3">
+          <p className={SECTION_LABEL}>Session Defaults</p>
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className={labelClass}>Length</label>
-              <select className={inputClass} value={settings.default_session_length} onChange={e => update('default_session_length', Number(e.target.value))}>
+              <label className={LABEL}>Length</label>
+              <select className={INPUT} value={settings.default_session_length} onChange={e => update('default_session_length', Number(e.target.value))}>
                 {[30, 45, 50, 60, 65, 90].map(m => <option key={m} value={m}>{m} min</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Type</label>
-              <select className={inputClass} value={settings.default_session_type} onChange={e => update('default_session_type', e.target.value)}>
+              <label className={LABEL}>Type</label>
+              <select className={INPUT} value={settings.default_session_type} onChange={e => update('default_session_type', e.target.value)}>
                 <option value="1:1">1:1</option>
                 <option value="Pod">Pod</option>
               </select>
             </div>
             <div>
-              <label className={labelClass}>Total Sessions</label>
-              <select className={inputClass} value={settings.default_total_sessions} onChange={e => update('default_total_sessions', e.target.value)}>
+              <label className={LABEL}>Total sessions</label>
+              <select className={INPUT} value={settings.default_total_sessions} onChange={e => update('default_total_sessions', e.target.value)}>
                 <option value="4">4</option>
                 <option value="8">8</option>
                 <option value="12">12</option>
@@ -161,60 +154,53 @@ export default function Settings() {
               </select>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* ── HOMEWORK PREFERENCES ── */}
-        <div className={sectionClass}>
-          <h3 className="font-black text-black text-sm flex items-center gap-2">✏️ Homework Preferences</h3>
-
+        {/* HOMEWORK */}
+        <Card className="space-y-3">
+          <p className={SECTION_LABEL}>Homework Preferences</p>
           <div>
-            <label className={labelClass}>Default Homework Length</label>
-            <select className={inputClass} value={settings.default_homework_length} onChange={e => update('default_homework_length', Number(e.target.value))}>
+            <label className={LABEL}>Default homework length</label>
+            <select className={INPUT} value={settings.default_homework_length} onChange={e => update('default_homework_length', Number(e.target.value))}>
               <option value={15}>15 min</option>
               <option value={20}>20 min</option>
               <option value={30}>30 min</option>
             </select>
           </div>
+          <Toggle
+            label="Include word bank on worksheets"
+            sub="Shows a word bank at the top of kid worksheets"
+            checked={settings.include_word_bank}
+            onChange={v => update('include_word_bank', v)}
+          />
+          <Toggle
+            label="Include bonus challenge"
+            sub="Adds a fun extra challenge at the end"
+            checked={settings.include_bonus_challenge}
+            onChange={v => update('include_bonus_challenge', v)}
+          />
+        </Card>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-black">Include word bank on worksheets</p>
-              <p className="text-xs text-gray-400">Shows a word bank at the top of kid worksheets</p>
-            </div>
-            <ToggleSwitch checked={settings.include_word_bank} onChange={v => update('include_word_bank', v)} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-black">Include bonus challenge</p>
-              <p className="text-xs text-gray-400">Adds a fun extra challenge at the end</p>
-            </div>
-            <ToggleSwitch checked={settings.include_bonus_challenge} onChange={v => update('include_bonus_challenge', v)} />
-          </div>
-        </div>
-
-        {/* ── PARENT EMAIL DEFAULTS ── */}
-        <div className={sectionClass}>
-          <h3 className="font-black text-black text-sm flex items-center gap-2">✉️ Parent Email Defaults</h3>
-
+        {/* EMAIL */}
+        <Card className="space-y-3">
+          <p className={SECTION_LABEL}>Parent Email Defaults</p>
           <div>
-            <label className={labelClass}>Email Sign-off Name</label>
-            <input className={inputClass} value={settings.email_signoff_name} onChange={e => update('email_signoff_name', e.target.value)} placeholder="Sarah" />
-            <p className="text-xs text-gray-400 mt-1">How you sign your emails. Defaults to tutor name if empty.</p>
+            <label className={LABEL}>Email sign-off name</label>
+            <input className={INPUT} value={settings.email_signoff_name} onChange={e => update('email_signoff_name', e.target.value)} placeholder="Sarah" />
+            <p className="text-[11px] text-[var(--v4-ink-3)] mt-1">How you sign emails. Defaults to tutor name if empty.</p>
           </div>
-
           <div>
-            <label className={labelClass}>Default Tone</label>
-            <div className="flex gap-2">
+            <label className={LABEL}>Default tone</label>
+            <div className="flex gap-1.5">
               {['warm', 'professional', 'casual'].map(tone => (
                 <button
                   key={tone}
                   type="button"
                   onClick={() => update('email_tone', tone)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition capitalize ${
+                  className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition capitalize ${
                     settings.email_tone === tone
-                      ? 'bg-[var(--primary)] text-white'
-                      : 'bg-gray-50 text-gray-500 hover:text-black'
+                      ? 'bg-[var(--v4-ink)] text-white'
+                      : 'bg-[var(--v4-surface)] text-[var(--v4-ink-2)] border border-[var(--v4-border)] hover:bg-[var(--v4-surface-3)]'
                   }`}
                 >
                   {tone}
@@ -222,110 +208,115 @@ export default function Settings() {
               ))}
             </div>
           </div>
+          <Toggle
+            label="Auto-include homework summary"
+            sub="Mentions what homework was assigned in the parent email"
+            checked={settings.auto_include_homework_summary}
+            onChange={v => update('auto_include_homework_summary', v)}
+          />
+        </Card>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-black">Auto-include homework summary</p>
-              <p className="text-xs text-gray-400">Mentions what homework was assigned in the parent email</p>
-            </div>
-            <ToggleSwitch checked={settings.auto_include_homework_summary} onChange={v => update('auto_include_homework_summary', v)} />
-          </div>
-        </div>
-
-        {/* ── SAVE BUTTON ── */}
-        <button type="submit" className="w-full bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-          {saved ? '✓ Saved!' : 'Save Settings'}
-        </button>
+        <BtnPrimary type="submit" className="w-full justify-center py-2.5">
+          <Save className="w-3.5 h-3.5" /> {saved ? 'Saved' : 'Save Settings'}
+        </BtnPrimary>
       </form>
 
-      {/* ── DATA MANAGEMENT ── */}
-      <div className={`${sectionClass} mt-6`}>
-        <h3 className="font-black text-black text-sm flex items-center gap-2">💾 Data Management</h3>
+      {/* DATA MANAGEMENT */}
+      <Card className="space-y-2.5">
+        <p className={SECTION_LABEL}>Data Management</p>
 
-        <div className="space-y-3">
+        <BtnSecondary onClick={handleExport} className="w-full justify-center py-2.5">
+          <Download className="w-3.5 h-3.5" /> Export All Data (JSON Backup)
+        </BtnSecondary>
+
+        <BtnSecondary onClick={() => fileInputRef.current.click()} className="w-full justify-center py-2.5">
+          <Upload className="w-3.5 h-3.5" /> Import Data from Backup
+        </BtnSecondary>
+        <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+
+        {importStatus && (
+          <div className={`rounded-md px-3 py-2 text-[12.5px] font-medium ${importStatus.includes('Failed') ? 'bg-[var(--v4-red-lt)] text-[var(--v4-red)]' : 'bg-[var(--v4-green-lt)] text-[var(--v4-green)]'}`}>
+            {importStatus}
+          </div>
+        )}
+
+        {!showClearConfirm ? (
           <button
             type="button"
-            onClick={handleExport}
-            className="w-full bg-white border-2 border-gray-100 py-3 rounded-full font-bold text-black hover:border-[var(--primary)] transition text-sm"
+            onClick={() => setShowClearConfirm(true)}
+            className="w-full flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-md bg-[var(--v4-surface)] border border-[var(--v4-red-lt)] text-[12.5px] font-semibold text-[var(--v4-red)] hover:bg-[var(--v4-red-lt)]"
           >
-            📥 Export All Data (JSON Backup)
+            <Trash2 className="w-3.5 h-3.5" /> Clear All Data
           </button>
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current.click()}
-            className="w-full bg-white border-2 border-gray-100 py-3 rounded-full font-bold text-black hover:border-[var(--primary)] transition text-sm"
-          >
-            📤 Import Data from Backup
-          </button>
-          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
-
-          {importStatus && (
-            <div className={`rounded-xl p-3 text-sm font-bold ${importStatus.includes('Failed') ? 'bg-[var(--red-light)] text-[var(--red)]' : 'bg-[var(--green-light)] text-[var(--green)]'}`}>
-              {importStatus}
+        ) : (
+          <div className="bg-[var(--v4-red-lt)] rounded-md p-3 space-y-2">
+            <p className="text-[12.5px] font-semibold text-[var(--v4-red)]">
+              This will permanently delete all students, assessments, sessions, emails, and homework. Are you sure?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="flex-1 bg-[var(--v4-red)] text-white py-1.5 rounded-md font-semibold text-[12px]"
+              >
+                Yes, delete everything
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 bg-[var(--v4-surface)] border border-[var(--v4-border)] text-[var(--v4-ink-2)] py-1.5 rounded-md font-semibold text-[12px]"
+              >
+                Cancel
+              </button>
             </div>
-          )}
+          </div>
+        )}
+      </Card>
 
-          {!showClearConfirm ? (
-            <button
-              type="button"
-              onClick={() => setShowClearConfirm(true)}
-              className="w-full bg-white border-2 border-red-200 py-3 rounded-full font-bold text-[var(--red)] hover:bg-[var(--red-light)] transition text-sm"
-            >
-              🗑️ Clear All Data
-            </button>
-          ) : (
-            <div className="bg-[var(--red-light)] rounded-2xl border-2 border-red-200 p-4 space-y-3">
-              <p className="text-sm font-bold text-[var(--red)]">Are you sure? This will permanently delete all students, assessments, sessions, emails, and homework.</p>
-              <div className="flex gap-3">
-                <button type="button" onClick={handleClearAll} className="flex-1 bg-[var(--red)] text-white py-2.5 rounded-full font-bold text-sm">
-                  Yes, delete everything
-                </button>
-                <button type="button" onClick={() => setShowClearConfirm(false)} className="flex-1 bg-white border-2 border-gray-100 py-2.5 rounded-full font-bold text-black text-sm">
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+      {/* ABOUT */}
+      <Card className="space-y-1.5">
+        <p className={SECTION_LABEL}>About</p>
+        <div className="space-y-1 text-[12.5px]">
+          <Row label="Version" value="1.0.0" />
+          <Row label="Storage" value="Neon Postgres · server" />
+          <Row label="AI Model" value="Claude Sonnet 4.5" />
+          <Row
+            label="Source"
+            value={
+              <a href="https://github.com/mattspeed33/decodable" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--v4-ink)] hover:underline flex items-center gap-1">
+                GitHub <ExternalLink className="w-3 h-3" />
+              </a>
+            }
+          />
         </div>
-      </div>
-
-      {/* ── ABOUT ── */}
-      <div className={`${sectionClass} mt-6 mb-8`}>
-        <h3 className="font-black text-black text-sm flex items-center gap-2">ℹ️ About</h3>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Version</span>
-            <span className="font-bold text-black">1.0.0</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Storage</span>
-            <span className="font-bold text-black">localStorage (browser only)</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">AI Model</span>
-            <span className="font-bold text-black">Claude Sonnet 4.5</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Source</span>
-            <a href="https://github.com/mattspeed33/decodable" target="_blank" rel="noopener noreferrer" className="font-bold text-[var(--primary)] hover:underline">
-              GitHub ↗
-            </a>
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   )
 }
 
-function ToggleSwitch({ checked, onChange }) {
+function Row({ label, value }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${checked ? 'bg-[var(--primary)]' : 'bg-gray-200'}`}
-    >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
-    </button>
+    <div className="flex justify-between">
+      <span className="text-[var(--v4-ink-3)]">{label}</span>
+      <span className="font-semibold text-[var(--v4-ink)]">{value}</span>
+    </div>
+  )
+}
+
+function Toggle({ label, sub, checked, onChange }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{label}</p>
+        <p className="text-[11.5px] text-[var(--v4-ink-3)]">{sub}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${checked ? 'bg-[var(--v4-ink)]' : 'bg-[var(--v4-surface-3)]'}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+      </button>
+    </div>
   )
 }

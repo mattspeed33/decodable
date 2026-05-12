@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Save, ClipboardList, Undo2 } from 'lucide-react'
 import { saveAnalysis, getStudent } from '../lib/storage'
 import { useAsync } from '../lib/useAsync'
+import { BtnPrimary, BtnSecondary, Card } from '../components/v4/primitives.jsx'
 
 export default function AnalysisResult() {
   const { id } = useParams()
@@ -14,10 +16,9 @@ export default function AnalysisResult() {
 
   if (!data) {
     return (
-      <div className="text-center py-20">
-        <span className="text-5xl block mb-3">📸</span>
-        <p className="text-gray-400 font-bold">No analysis data found</p>
-        <p className="text-gray-400 text-sm">Upload an assessment first.</p>
+      <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-12 text-center">
+        <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">No analysis data found</p>
+        <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Upload an assessment first.</p>
       </div>
     )
   }
@@ -40,156 +41,186 @@ export default function AnalysisResult() {
 
   function handleDiscard() {
     sessionStorage.removeItem('decodable_pending_analysis')
-    navigate(`/students/${id}/upload`)
-  }
-
-  const ropeColors = {
-    'Strength': { bg: 'bg-[var(--green-light)]', text: 'text-[var(--green)]' },
-    'Emerging': { bg: 'bg-[var(--orange-light)]', text: 'text-[var(--orange)]' },
+    navigate(`/students/${id}`)
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="max-w-3xl space-y-5">
+      <button
+        onClick={() => navigate(`/students/${id}`)}
+        className="flex items-center gap-1 text-[11.5px] text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] font-medium"
+      >
+        <ArrowLeft className="w-3 h-3" /> {student?.name || 'Student'}
+      </button>
+
       <div className="flex items-baseline justify-between">
-        <h2 className="text-3xl font-black text-black tracking-tight">{student?.name}</h2>
-        <p className="text-sm text-gray-400 font-semibold">{data.date}</p>
+        <h2 className="text-[22px] font-bold text-[var(--v4-ink)] tracking-[-0.5px]">Analysis Result</h2>
+        <p className="text-[12.5px] text-[var(--v4-ink-3)]">{data.date}</p>
       </div>
 
-      {/* Badges */}
-      <div className="flex gap-2 flex-wrap">
-        <span className="text-xs bg-[var(--blue-light)] text-[var(--blue)] px-3 py-1 rounded-full font-bold">
-          📖 {a.passage_level_reached} level
-        </span>
-        <span className="text-xs px-3 py-1 rounded-full font-bold" style={{
-          background: a.fluency_estimate_pct >= 80 ? 'var(--green-light)' : a.fluency_estimate_pct >= 50 ? 'var(--orange-light)' : 'var(--red-light)',
-          color: a.fluency_estimate_pct >= 80 ? 'var(--green)' : a.fluency_estimate_pct >= 50 ? 'var(--orange)' : 'var(--red)'
-        }}>
-          🎯 Fluency {a.fluency_estimate_pct}%
-        </span>
-        <span className="text-xs bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1 rounded-full font-bold">
-          📘 UFLI Unit {a.ufli_placement.current_working_unit}
-        </span>
+      {/* Top badges */}
+      <div className="flex flex-wrap gap-1.5">
+        <Pill tone="blue">{a.passage_level_reached}</Pill>
+        <Pill tone={a.fluency_estimate_pct >= 80 ? 'green' : a.fluency_estimate_pct >= 50 ? 'amber' : 'red'}>
+          Fluency {a.fluency_estimate_pct}%
+        </Pill>
+        <Pill tone="purple">UFLI Unit {a.ufli_placement.current_working_unit}</Pill>
       </div>
 
       {/* Strengths */}
-      <div className="bg-[var(--green-light)] rounded-2xl border-2 border-green-200 p-5">
-        <h3 className="text-sm font-black text-[var(--green)] mb-2">💪 What's solid</h3>
-        <ul className="space-y-1.5">
-          {a.strengths.map((s, i) => (
-            <li key={i} className="text-sm text-gray-800 flex gap-2 items-start"><span className="text-[var(--green)]">✓</span><span>{s}</span></li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Gaps */}
-      <div className="bg-[var(--red-light)] rounded-2xl border-2 border-red-200 p-5">
-        <h3 className="text-sm font-black text-[var(--red)] mb-2">🎯 Where to focus</h3>
-        <ul className="space-y-2">
-          {a.priority_gaps.map((gap, i) => (
-            <li key={i} className="text-sm text-gray-800 flex gap-2 items-start">
-              <span className="bg-white text-[var(--red)] text-xs font-black w-5 h-5 rounded-md flex items-center justify-center shrink-0">{gap.rank}</span>
-              <span><span className="font-bold text-black">{gap.gap}</span> — <span className="text-gray-600">{gap.why_it_matters}</span></span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Watch list */}
-      {a.patterns_to_watch?.length > 0 && (
-        <div className="bg-[var(--orange-light)] rounded-2xl border-2 border-orange-200 p-5">
-          <h3 className="text-sm font-black text-[var(--orange)] mb-2">⚠️ Keep an eye on</h3>
-          <ul className="space-y-1.5">
-            {a.patterns_to_watch.map((p, i) => (
-              <li key={i} className="text-sm text-gray-800 flex gap-2 items-start"><span className="text-[var(--orange)]">●</span><span>{p}</span></li>
+      {a.strengths?.length > 0 && (
+        <Block tone="green" title="What's solid">
+          <ul className="space-y-1">
+            {a.strengths.map((s, i) => (
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
+                <span className="text-[var(--v4-green)]">✓</span> {s}
+              </li>
             ))}
           </ul>
-        </div>
+        </Block>
       )}
 
-      {/* UFLI */}
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-5">
-        <h3 className="text-sm font-black text-black mb-3">📘 UFLI Placement</h3>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-xl bg-gray-50 p-3 border-2 border-gray-100">
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">Mastered</p>
-            <p className="text-xl font-black text-black mt-1">{a.ufli_placement.last_unit_mastered}</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">{a.ufli_placement.last_unit_name}</p>
-          </div>
-          <div className="rounded-xl bg-[var(--primary-light)] p-3 border-2 border-[var(--primary)]">
-            <p className="text-[10px] text-[var(--primary)] uppercase font-bold tracking-wide">Working on</p>
-            <p className="text-xl font-black text-[var(--primary)] mt-1">{a.ufli_placement.current_working_unit}</p>
-            <p className="text-[10px] text-[var(--primary)] mt-0.5">{a.ufli_placement.current_unit_name}</p>
-          </div>
-          <div className="rounded-xl bg-gray-50 p-3 border-2 border-gray-100">
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">Next up</p>
-            <p className="text-xl font-black text-black mt-1">{a.ufli_placement.next_unlock_unit}</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">{a.ufli_placement.next_unlock_name}</p>
-          </div>
-        </div>
-      </div>
+      {/* Gaps */}
+      {a.priority_gaps?.length > 0 && (
+        <Block tone="red" title="Where to focus">
+          <ul className="space-y-1.5">
+            {a.priority_gaps.map((g, i) => (
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
+                <span className="bg-white text-[var(--v4-red)] text-[10.5px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0">{g.rank}</span>
+                <span><span className="font-semibold text-[var(--v4-ink)]">{g.gap}</span> — <span className="text-[var(--v4-ink-3)]">{g.why_it_matters}</span></span>
+              </li>
+            ))}
+          </ul>
+        </Block>
+      )}
 
-      {/* 4-Week Plan */}
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-5">
-        <h3 className="text-sm font-black text-black mb-3">📅 4-Week Plan</h3>
-        <ul className="space-y-2">
-          {(a.week_arc || a.four_week_arc).map((week, i) => (
-            <li key={i} className="text-sm flex gap-2.5 items-start">
-              <span className="bg-[var(--primary-light)] text-[var(--primary)] text-xs font-black w-7 h-7 rounded-lg flex items-center justify-center shrink-0">{week.week}</span>
-              <span><span className="font-bold text-black">{week.focus}</span> <span className="text-gray-400">— {week.activity_type}</span></span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {a.patterns_to_watch?.length > 0 && (
+        <Block tone="amber" title="Keep an eye on">
+          <ul className="space-y-1">
+            {a.patterns_to_watch.map((p, i) => (
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
+                <span className="text-[var(--v4-amber)]">●</span> {p}
+              </li>
+            ))}
+          </ul>
+        </Block>
+      )}
+
+      {/* UFLI Placement */}
+      <Card>
+        <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-3">UFLI Placement</p>
+        <div className="grid grid-cols-3 gap-2">
+          <UfliCell title="Mastered" unit={a.ufli_placement.last_unit_mastered} name={a.ufli_placement.last_unit_name} />
+          <UfliCell title="Working on" unit={a.ufli_placement.current_working_unit} name={a.ufli_placement.current_unit_name} highlight />
+          <UfliCell title="Next up" unit={a.ufli_placement.next_unlock_unit} name={a.ufli_placement.next_unlock_name} />
+        </div>
+      </Card>
+
+      {/* Week arc */}
+      {(a.week_arc || a.four_week_arc) && (
+        <Card>
+          <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-3">
+            {(a.week_arc || a.four_week_arc).length}-Week Plan
+          </p>
+          <ul className="space-y-1.5">
+            {(a.week_arc || a.four_week_arc).map((week, i) => (
+              <li key={i} className="text-[13px] flex gap-2 items-start">
+                <span className="bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] text-[10.5px] font-bold w-5 h-5 rounded flex items-center justify-center shrink-0">{week.week}</span>
+                <span><span className="font-semibold text-[var(--v4-ink)]">{week.focus}</span> <span className="text-[var(--v4-ink-3)]">— {week.activity_type}</span></span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* Detailed breakdown */}
-      <details className="bg-white rounded-2xl border-2 border-gray-100">
-        <summary className="p-5 text-sm font-black text-black cursor-pointer">🔬 Detailed breakdown</summary>
-        <div className="px-5 pb-5 space-y-4 border-t border-gray-100 pt-4">
+      <details className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)]">
+        <summary className="px-4 py-3 text-[11.5px] font-semibold text-[var(--v4-ink-2)] uppercase tracking-[0.6px] cursor-pointer">
+          Detailed breakdown
+        </summary>
+        <div className="px-4 pb-4 space-y-3 border-t border-[var(--v4-border)] pt-3">
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase mb-2 tracking-wide">Scarborough's Rope</p>
-            <ul className="space-y-1.5">
-              {['phonological_awareness', 'decoding', 'sight_recognition', 'vocabulary', 'verbal_reasoning'].map(key => {
-                const val = a.scarboroughs_rope[key]
-                const c = ropeColors[val] || { bg: 'bg-gray-100', text: 'text-gray-500' }
-                return (
-                  <li key={key} className="text-sm flex justify-between items-center">
-                    <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}</span>
-                    <span className={`${c.bg} ${c.text} text-xs font-bold px-2.5 py-0.5 rounded-full`}>{val}</span>
-                  </li>
-                )
-              })}
-              <li className="text-xs text-[var(--orange)] font-bold mt-2">⚠️ Weakest: {a.scarboroughs_rope.weakest_thread}</li>
+            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1.5">Scarborough's Rope</p>
+            <ul className="space-y-1">
+              {['phonological_awareness', 'decoding', 'sight_recognition', 'vocabulary', 'verbal_reasoning'].map(key => (
+                <li key={key} className="text-[12.5px] flex justify-between">
+                  <span className="text-[var(--v4-ink-2)] capitalize">{key.replace(/_/g, ' ')}</span>
+                  <span className="font-semibold text-[var(--v4-ink)]">{a.scarboroughs_rope[key]}</span>
+                </li>
+              ))}
+              <li className="text-[11.5px] text-[var(--v4-amber)] font-semibold mt-1">Weakest: {a.scarboroughs_rope.weakest_thread}</li>
             </ul>
           </div>
-
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase mb-1 tracking-wide">Hegarty Phonemic Awareness</p>
-            <p className="text-sm text-gray-700">Solid through <span className="font-bold text-[var(--green)]">{a.hegarty_placement.highest_mastered}</span>, breaking down at <span className="font-bold text-[var(--orange)]">{a.hegarty_placement.breaking_down_at}</span></p>
-            {a.hegarty_placement.notes && <p className="text-xs text-gray-500 mt-0.5">{a.hegarty_placement.notes}</p>}
+            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1">Hegarty Phonemic Awareness</p>
+            <p className="text-[12.5px] text-[var(--v4-ink-2)]">
+              Solid through <span className="font-semibold text-[var(--v4-green)]">{a.hegarty_placement.highest_mastered}</span>, breaking down at <span className="font-semibold text-[var(--v4-amber)]">{a.hegarty_placement.breaking_down_at}</span>
+            </p>
+            {a.hegarty_placement.notes && <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">{a.hegarty_placement.notes}</p>}
           </div>
-
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase mb-1 tracking-wide">Fluency Note</p>
-            <p className="text-sm text-gray-700">{a.fluency_rationale}</p>
+            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1">Fluency rationale</p>
+            <p className="text-[12.5px] text-[var(--v4-ink-2)]">{a.fluency_rationale}</p>
           </div>
         </div>
       </details>
 
-      <p className="text-[10px] text-gray-300 text-center">Confidence: {a.confidence}</p>
+      <p className="text-[10.5px] text-[var(--v4-ink-4)] text-center">Confidence: {a.confidence}</p>
 
       {/* Actions */}
-      <div className="action-buttons flex gap-3">
-        <button onClick={handleSave} className="flex-1 bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-          ✓ Save
-        </button>
-        <button onClick={async () => { await handleSave(); navigate(`/students/${id}/session`); }} className="flex-1 bg-white border-2 border-gray-100 py-3.5 rounded-full font-bold text-black hover:border-[var(--primary)] transition">
-          📋 Save & Plan
-        </button>
-        <button onClick={handleDiscard} className="bg-white border-2 border-gray-100 py-3.5 px-5 rounded-full text-sm text-gray-400 font-bold hover:border-[var(--red)] hover:text-[var(--red)] transition">
-          ↩ Redo
-        </button>
+      <div className="flex items-center gap-2">
+        <BtnPrimary onClick={handleSave} className="flex-1 justify-center py-2.5">
+          <Save className="w-3.5 h-3.5" /> Save
+        </BtnPrimary>
+        <BtnSecondary onClick={async () => { await handleSave(); navigate(`/students/${id}`) }} className="flex-1 justify-center py-2.5">
+          <ClipboardList className="w-3.5 h-3.5" /> Save & Plan
+        </BtnSecondary>
+        <BtnSecondary onClick={handleDiscard} className="py-2.5">
+          <Undo2 className="w-3.5 h-3.5" /> Redo
+        </BtnSecondary>
       </div>
+    </div>
+  )
+}
+
+const TONE = {
+  green: 'bg-[var(--v4-green-lt)]',
+  red:   'bg-[var(--v4-red-lt)]',
+  amber: 'bg-[var(--v4-amber-lt)]',
+  blue:  'bg-[var(--v4-blue-lt)]',
+  purple:'bg-[var(--v4-purple-lt)]',
+}
+const TONE_LABEL = {
+  green: 'text-[var(--v4-green)]',
+  red:   'text-[var(--v4-red)]',
+  amber: 'text-[var(--v4-amber)]',
+  blue:  'text-[var(--v4-blue)]',
+  purple:'text-[var(--v4-purple)]',
+}
+
+function Block({ tone, title, children }) {
+  return (
+    <div className={`rounded-[10px] p-4 ${TONE[tone]}`}>
+      <p className={`text-[10.5px] font-semibold uppercase tracking-[0.6px] mb-2 ${TONE_LABEL[tone]}`}>{title}</p>
+      {children}
+    </div>
+  )
+}
+
+function Pill({ tone, children }) {
+  return (
+    <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${TONE[tone]} ${TONE_LABEL[tone]}`}>
+      {children}
+    </span>
+  )
+}
+
+function UfliCell({ title, unit, name, highlight }) {
+  return (
+    <div className={`rounded-md p-2.5 text-center ${highlight ? 'bg-[var(--v4-purple-lt)]' : 'bg-[var(--v4-surface-2)] border border-[var(--v4-border)]'}`}>
+      <p className={`text-[10px] uppercase font-semibold tracking-[0.6px] ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink-3)]'}`}>{title}</p>
+      <p className={`text-[18px] font-bold mt-0.5 ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink)]'}`}>{unit}</p>
+      <p className={`text-[10px] mt-0.5 ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink-3)]'}`}>{name}</p>
     </div>
   )
 }

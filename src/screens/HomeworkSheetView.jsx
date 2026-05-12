@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Printer, RefreshCw } from 'lucide-react'
 import { getHomeworkSheet, getStudent } from '../lib/storage'
 import { useAsync } from '../lib/useAsync'
-import StudentTabs from '../components/StudentTabs.jsx'
+import { BtnPrimary, BtnSecondary, Card } from '../components/v4/primitives.jsx'
 
 export default function HomeworkSheetView() {
   const navigate = useNavigate()
@@ -10,55 +11,71 @@ export default function HomeworkSheetView() {
   const { data: sheet, loading: l2 } = useAsync(() => getHomeworkSheet(sheetId), [sheetId])
 
   if (l1 || l2) {
-    return <p className="text-center text-gray-400 py-20 text-sm font-bold">Loading…</p>
+    return <p className="text-center text-[var(--v4-ink-3)] py-20 text-sm font-medium">Loading…</p>
   }
 
   if (!student || !sheet || sheet.student_id !== id) {
-    return <p className="text-center text-gray-400 py-20">Homework sheet not found.</p>
+    return <p className="text-center text-[var(--v4-ink-3)] py-20 text-sm font-medium">Homework sheet not found.</p>
   }
 
   return (
-    <div className="space-y-5">
-      <StudentTabs studentId={id} />
+    <div className="max-w-3xl space-y-5">
+      <button
+        onClick={() => navigate(`/students/${id}`)}
+        className="flex items-center gap-1 text-[11.5px] text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] font-medium"
+      >
+        <ArrowLeft className="w-3 h-3" /> {student.name}
+      </button>
 
-      <div className="homework-sheet">
-        <div className="mb-6">
-          <h2 className="text-3xl font-black text-black tracking-tight">Homework</h2>
-          <p className="text-sm text-gray-500 mt-1">{sheet.student_name || student.name} &middot; Week of {sheet.week_of}</p>
-          <p className="text-sm font-semibold text-black mt-1">Skill: {sheet.skill_focus}</p>
+      <div className="homework-sheet space-y-4">
+        <div>
+          <h2 className="text-[22px] font-bold text-[var(--v4-ink)] tracking-[-0.5px]">Homework</h2>
+          <p className="text-[12.5px] text-[var(--v4-ink-3)] mt-0.5">
+            {sheet.student_name || student.name} · Week of {sheet.week_of}
+          </p>
+          {sheet.skill_focus && (
+            <p className="text-[13px] font-semibold text-[var(--v4-ink)] mt-1">Skill: {sheet.skill_focus}</p>
+          )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {(sheet.activities || []).map((activity, i) => (
-            <div key={i} className="rounded-2xl border border-gray-200 p-5 bg-white">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-black">Activity {activity.number}: {activity.name}</h3>
-                <span className="text-xs text-gray-400 shrink-0 ml-2">{activity.time_minutes} min</span>
+            <Card key={i} padding="p-4">
+              <div className="flex items-start justify-between mb-1.5">
+                <p className="text-[13.5px] font-semibold text-[var(--v4-ink)]">
+                  Activity {activity.number}: {activity.name}
+                </p>
+                <span className="text-[10.5px] text-[var(--v4-ink-3)] font-semibold bg-[var(--v4-surface-3)] px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 ml-2">
+                  {activity.time_minutes} min
+                </span>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{activity.skill}</p>
-              <ol className="text-sm text-gray-700 list-decimal ml-4 space-y-1">
+              {activity.skill && (
+                <p className="text-[11.5px] text-[var(--v4-ink-3)] mb-2">{activity.skill}</p>
+              )}
+              <ol className="text-[13px] text-[var(--v4-ink-2)] list-decimal ml-4 space-y-1">
                 {(activity.parent_instructions || []).map((step, j) => (
                   <li key={j}>{step}</li>
                 ))}
               </ol>
-            </div>
+            </Card>
           ))}
         </div>
 
         {sheet.tutor_note_to_parent && (
-          <div className="rounded-2xl border border-gray-200 p-5 mt-4 bg-white">
-            <p className="text-sm text-gray-700">{sheet.tutor_note_to_parent}</p>
-          </div>
+          <Card padding="p-4">
+            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1">Note from tutor</p>
+            <p className="text-[13px] text-[var(--v4-ink-2)]">{sheet.tutor_note_to_parent}</p>
+          </Card>
         )}
       </div>
 
-      <div className="action-buttons flex gap-3">
-        <button onClick={() => window.print()} className="flex-1 bg-[var(--primary)] text-white py-3 rounded-full font-semibold hover:bg-[var(--primary-hover)] transition">
-          Print
-        </button>
-        <button onClick={() => navigate(`/students/${id}/homework/new`)} className="flex-1 bg-white border border-gray-200 py-3 rounded-full font-semibold text-black hover:border-black transition">
-          Regenerate
-        </button>
+      <div className="action-buttons flex items-center gap-2">
+        <BtnPrimary onClick={() => window.print()} className="flex-1 justify-center py-2.5">
+          <Printer className="w-3.5 h-3.5" /> Print
+        </BtnPrimary>
+        <BtnSecondary onClick={() => navigate(`/students/${id}/homework/new`)} className="flex-1 justify-center py-2.5">
+          <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+        </BtnSecondary>
       </div>
     </div>
   )

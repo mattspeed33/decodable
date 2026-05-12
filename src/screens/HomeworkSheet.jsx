@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Printer, RefreshCw, Save } from 'lucide-react'
 import { getStudent, getLatestAssessment, saveHomeworkSheet } from '../lib/storage'
 import { useAsync } from '../lib/useAsync'
 import { runPrompt } from '../lib/claude'
 import { homeworkPrompt } from '../prompts/homeworkPrompt'
 import { bundleForHomework } from '../lib/dataHelpers'
 import LoadingState from '../components/LoadingState.jsx'
+import { BtnPrimary, BtnSecondary, Card } from '../components/v4/primitives.jsx'
 
 export default function HomeworkSheet() {
   const { id } = useParams()
@@ -58,9 +60,9 @@ export default function HomeworkSheet() {
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border-2 border-red-200 bg-[var(--red-light)] p-4 text-sm text-[var(--red)] font-bold">{error}</div>
-        <button onClick={generate} className="w-full bg-[var(--primary)] text-white py-3 rounded-full font-bold hover:bg-[var(--primary-hover)] transition">Retry</button>
+      <div className="max-w-3xl space-y-3">
+        <div className="rounded-md bg-[var(--v4-red-lt)] px-3 py-2 text-[12.5px] text-[var(--v4-red)] font-medium">{error}</div>
+        <BtnPrimary onClick={generate} className="w-full justify-center py-2.5">Retry</BtnPrimary>
       </div>
     )
   }
@@ -90,176 +92,169 @@ export default function HomeworkSheet() {
   const ws = sheet.worksheet
 
   return (
-    <div className="space-y-5">
-      <div className="mb-2">
-        <h2 className="text-3xl font-black text-black tracking-tight">✏️ Homework</h2>
-        <p className="text-sm text-gray-400 font-semibold mt-0.5">{sheet.student_name || student.name} &middot; Week of {sheet.week_of}</p>
-        <p className="text-sm font-bold text-black mt-1">Skill: {sheet.skill_focus}</p>
+    <div className="max-w-3xl space-y-5">
+      <div>
+        <h2 className="text-[22px] font-bold text-[var(--v4-ink)] tracking-[-0.5px]">Homework</h2>
+        <p className="text-[12.5px] text-[var(--v4-ink-3)] mt-0.5">{sheet.student_name || student.name} · Week of {sheet.week_of}</p>
+        {sheet.skill_focus && (
+          <p className="text-[13px] font-semibold text-[var(--v4-ink)] mt-1">Skill: {sheet.skill_focus}</p>
+        )}
       </div>
 
-      {/* Tab toggle */}
-      <div className="flex gap-2 rounded-2xl bg-white border-2 border-gray-100 p-2">
+      {/* View toggle */}
+      <div className="inline-flex rounded-md bg-[var(--v4-surface-3)] p-0.5">
         <button
           onClick={() => setView('worksheet')}
-          className={`flex-1 py-2 rounded-full text-sm font-bold transition ${view === 'worksheet' ? 'bg-[var(--primary)] text-white' : 'text-gray-500 hover:text-black'}`}
+          className={`px-3 py-1.5 rounded-[5px] text-[12.5px] font-semibold transition ${view === 'worksheet' ? 'bg-[var(--v4-surface)] text-[var(--v4-ink)] shadow-sm' : 'text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)]'}`}
         >
-          📝 Kid Worksheet
+          Kid Worksheet
         </button>
         <button
           onClick={() => setView('activities')}
-          className={`flex-1 py-2 rounded-full text-sm font-bold transition ${view === 'activities' ? 'bg-[var(--primary)] text-white' : 'text-gray-500 hover:text-black'}`}
+          className={`px-3 py-1.5 rounded-[5px] text-[12.5px] font-semibold transition ${view === 'activities' ? 'bg-[var(--v4-surface)] text-[var(--v4-ink)] shadow-sm' : 'text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)]'}`}
         >
-          👨‍👧 Parent Activities
+          Parent Activities
         </button>
       </div>
 
-      {/* ── WORKSHEET VIEW ── */}
+      {/* WORKSHEET VIEW */}
       {view === 'worksheet' && ws && (
         <div className="homework-sheet">
-          {/* Printable worksheet card */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 space-y-6">
-            {/* Header */}
-            <div className="text-center border-b-2 border-dashed border-gray-200 pb-4">
-              <h3 className="text-2xl font-black text-black">{ws.title}</h3>
-              <p className="text-sm text-gray-500 mt-1">Name: __________________ &nbsp;&nbsp; Date: __________________</p>
+          <Card padding="p-7" className="space-y-5">
+            <div className="text-center border-b border-dashed border-[var(--v4-border-2)] pb-3">
+              <h3 className="text-[20px] font-bold text-[var(--v4-ink)] tracking-[-0.3px]">{ws.title}</h3>
+              <p className="text-[12px] text-[var(--v4-ink-3)] mt-1">Name: __________________ &nbsp;&nbsp; Date: __________________</p>
             </div>
 
-            {/* Directions */}
-            <div className="bg-[var(--primary-light)] rounded-xl p-4">
-              <p className="text-sm font-bold text-[var(--primary)]">📋 Directions:</p>
-              <p className="text-sm text-gray-800 mt-1">{ws.directions}</p>
+            <div className="bg-[var(--v4-purple-lt)] rounded-md p-3">
+              <p className="text-[11.5px] font-semibold text-[var(--v4-purple)] uppercase tracking-[0.6px]">Directions</p>
+              <p className="text-[13px] text-[var(--v4-ink-2)] mt-0.5">{ws.directions}</p>
             </div>
 
-            {/* Word bank */}
             {ws.word_bank?.length > 0 && (
-              <div className="bg-[var(--blue-light)] rounded-xl p-4">
-                <p className="text-xs font-bold text-[var(--blue)] mb-2">📦 Word Bank</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-[var(--v4-blue-lt)] rounded-md p-3">
+                <p className="text-[11.5px] font-semibold text-[var(--v4-blue)] uppercase tracking-[0.6px] mb-2">Word bank</p>
+                <div className="flex flex-wrap gap-1.5">
                   {ws.word_bank.map((w, i) => (
-                    <span key={i} className="text-sm font-bold text-black bg-white px-3 py-1 rounded-lg border border-gray-200">{w}</span>
+                    <span key={i} className="text-[13px] font-semibold text-[var(--v4-ink)] bg-white px-2.5 py-0.5 rounded border border-[var(--v4-border)]">{w}</span>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Exercise items */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {ws.items?.map((item, i) => (
                 <div key={i} className="flex gap-3 items-start">
-                  <span className="bg-[var(--primary)] text-white w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-black text-sm">{item.number}</span>
+                  <span className="bg-[var(--v4-ink)] text-white w-6 h-6 rounded-md flex items-center justify-center shrink-0 font-bold text-[12px]">{item.number}</span>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-800 font-medium">{item.prompt}</p>
-                    <div className="mt-2 border-b-2 border-dotted border-gray-300 w-48 h-6" />
+                    <p className="text-[13px] text-[var(--v4-ink-2)] font-medium">{item.prompt}</p>
+                    <div className="mt-2 border-b border-dotted border-[var(--v4-border-2)] w-48 h-5" />
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Bonus */}
             {ws.bonus && (
-              <div className="bg-[var(--gold-light)] rounded-xl p-4 border-2 border-dashed border-yellow-300">
-                <p className="text-sm font-black text-[var(--orange)]">⭐ Bonus Challenge!</p>
-                <p className="text-sm text-gray-800 mt-1">{ws.bonus.prompt}</p>
+              <div className="bg-[var(--v4-amber-lt)] rounded-md p-3 border border-dashed border-[var(--v4-amber)]">
+                <p className="text-[11.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Bonus challenge</p>
+                <p className="text-[13px] text-[var(--v4-ink-2)] mt-0.5">{ws.bonus.prompt}</p>
                 {ws.bonus.type === 'creative' && (
-                  <div className="mt-3 border-2 border-dashed border-gray-200 rounded-xl h-24 flex items-center justify-center">
-                    <p className="text-xs text-gray-300 font-semibold">Draw or write here!</p>
+                  <div className="mt-2 border border-dashed border-[var(--v4-border-2)] rounded-md h-20 flex items-center justify-center">
+                    <p className="text-[11px] text-[var(--v4-ink-4)] font-medium">Draw or write here</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Footer */}
-            <div className="text-center pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-400">Great job! 🌟 Bring this back to your next session.</p>
+            <div className="text-center pt-3 border-t border-[var(--v4-border)]">
+              <p className="text-[11px] text-[var(--v4-ink-3)]">Great job! Bring this back to your next session.</p>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
-      {/* ── WORKSHEET EMPTY STATE ── */}
       {view === 'worksheet' && !ws && (
-        <div className="text-center py-12 bg-white rounded-2xl border-2 border-gray-100">
-          <span className="text-4xl block mb-2">📝</span>
-          <p className="text-gray-400 font-bold">No worksheet generated</p>
-          <p className="text-gray-400 text-sm">Try regenerating.</p>
+        <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-10 text-center">
+          <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">No worksheet generated</p>
+          <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Try regenerating.</p>
         </div>
       )}
 
-      {/* ── PARENT ACTIVITIES VIEW ── */}
+      {/* PARENT ACTIVITIES VIEW */}
       {view === 'activities' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {(sheet.parent_activities || sheet.activities || []).map((activity, i) => (
-            <div key={i} className="bg-white rounded-2xl border-2 border-gray-100 p-5">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-black">Activity {activity.number}: {activity.name}</h3>
-                <span className="text-xs text-gray-400 shrink-0 ml-2">{activity.time_minutes} min</span>
+            <Card key={i} padding="p-4">
+              <div className="flex items-start justify-between mb-1.5">
+                <p className="text-[13.5px] font-semibold text-[var(--v4-ink)]">
+                  Activity {activity.number}: {activity.name}
+                </p>
+                <span className="text-[10.5px] text-[var(--v4-ink-3)] font-semibold bg-[var(--v4-surface-3)] px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 ml-2">
+                  {activity.time_minutes} min
+                </span>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{activity.skill}</p>
-
+              {activity.skill && <p className="text-[11.5px] text-[var(--v4-ink-3)] mb-2">{activity.skill}</p>}
               {activity.materials?.length > 0 && (
-                <p className="text-xs text-gray-500 mb-3"><span className="font-semibold">📦 Materials:</span> {activity.materials.join(', ')}</p>
+                <p className="text-[11.5px] text-[var(--v4-ink-3)] mb-2">
+                  <span className="font-semibold">Materials:</span> {activity.materials.join(', ')}
+                </p>
               )}
-
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
-                  <p className="text-xs font-bold text-black mb-1">Instructions:</p>
-                  <ol className="text-sm text-gray-700 list-decimal ml-4 space-y-1">
-                    {activity.parent_instructions?.map((step, j) => (
-                      <li key={j}>{step}</li>
-                    ))}
+                  <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1">Instructions</p>
+                  <ol className="text-[13px] text-[var(--v4-ink-2)] list-decimal ml-4 space-y-1">
+                    {activity.parent_instructions?.map((step, j) => <li key={j}>{step}</li>)}
                   </ol>
                 </div>
-
                 {activity.what_to_say_to_child && (
-                  <div className="rounded-xl bg-[var(--primary-light)] p-3">
-                    <p className="text-xs font-bold text-[var(--primary)]">💬 What to say:</p>
-                    <p className="text-sm text-gray-700 italic">"{activity.what_to_say_to_child}"</p>
+                  <div className="rounded-md bg-[var(--v4-purple-lt)] p-2.5">
+                    <p className="text-[10.5px] font-semibold text-[var(--v4-purple)] uppercase tracking-[0.6px]">What to say</p>
+                    <p className="text-[12.5px] text-[var(--v4-ink-2)] italic">"{activity.what_to_say_to_child}"</p>
                   </div>
                 )}
-
                 {activity.if_child_struggles && (
-                  <div className="rounded-xl bg-[var(--orange-light)] p-3">
-                    <p className="text-xs font-bold text-[var(--orange)]">⚠️ If they struggle:</p>
-                    <p className="text-sm text-gray-700">{activity.if_child_struggles}</p>
+                  <div className="rounded-md bg-[var(--v4-amber-lt)] p-2.5">
+                    <p className="text-[10.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">If they struggle</p>
+                    <p className="text-[12.5px] text-[var(--v4-ink-2)]">{activity.if_child_struggles}</p>
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
 
           {sheet.tutor_note_to_parent && (
-            <div className="bg-white rounded-2xl border-2 border-gray-100 p-5">
-              <p className="text-xs font-bold text-black mb-1">📝 Note from tutor</p>
-              <p className="text-sm text-gray-700">{sheet.tutor_note_to_parent}</p>
-            </div>
+            <Card padding="p-4">
+              <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1">Note from tutor</p>
+              <p className="text-[12.5px] text-[var(--v4-ink-2)]">{sheet.tutor_note_to_parent}</p>
+            </Card>
           )}
 
           {sheet.book_recommendation && (
-            <div className="bg-[var(--green-light)] rounded-2xl border-2 border-green-200 p-5">
-              <p className="text-xs font-bold text-[var(--green)]">📚 Recommended Reading</p>
-              <p className="text-sm font-bold text-black mt-1">{sheet.book_recommendation.title}</p>
+            <div className="bg-[var(--v4-green-lt)] rounded-[10px] p-4">
+              <p className="text-[10.5px] font-semibold text-[var(--v4-green)] uppercase tracking-[0.6px]">Recommended reading</p>
+              <p className="text-[13.5px] font-semibold text-[var(--v4-ink)] mt-1">{sheet.book_recommendation.title}</p>
               {sheet.book_recommendation.series && (
-                <p className="text-xs text-gray-500">{sheet.book_recommendation.series}</p>
+                <p className="text-[11.5px] text-[var(--v4-ink-3)]">{sheet.book_recommendation.series}</p>
               )}
-              <p className="text-xs text-gray-600 mt-1">{sheet.book_recommendation.why}</p>
+              <p className="text-[12px] text-[var(--v4-ink-2)] mt-1">{sheet.book_recommendation.why}</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ── ACTIONS ── */}
-      <div className="action-buttons flex gap-3">
+      {/* ACTIONS */}
+      <div className="action-buttons flex items-center gap-2">
         {view === 'worksheet' && ws && (
-          <button onClick={() => window.print()} className="flex-1 bg-white border-2 border-gray-100 py-3.5 rounded-full font-bold text-black hover:border-[var(--primary)] transition">
-            🖨️ Print Worksheet
-          </button>
+          <BtnSecondary onClick={() => window.print()} className="py-2.5">
+            <Printer className="w-3.5 h-3.5" /> Print
+          </BtnSecondary>
         )}
-        <button onClick={saveAssignment} className="flex-1 bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-          {saved ? '✓ Saved!' : '✓ Assign & Save'}
-        </button>
-        <button onClick={generate} className="bg-white border-2 border-gray-100 py-3.5 px-5 rounded-full font-bold text-gray-500 hover:border-[var(--primary)] hover:text-black transition">
-          ↻ Redo
-        </button>
+        <BtnPrimary onClick={saveAssignment} className="flex-1 justify-center py-2.5">
+          <Save className="w-3.5 h-3.5" /> {saved ? 'Saved' : 'Assign & Save'}
+        </BtnPrimary>
+        <BtnSecondary onClick={generate} className="py-2.5">
+          <RefreshCw className="w-3.5 h-3.5" /> Redo
+        </BtnSecondary>
       </div>
     </div>
   )
