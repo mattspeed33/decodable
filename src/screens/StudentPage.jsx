@@ -18,6 +18,7 @@ import {
 
 import ProfileTab from './tabs/ProfileTab.jsx'
 import AssessmentsTab from './tabs/AssessmentsTab.jsx'
+import AnalysisTab from './tabs/AnalysisTab.jsx'
 import SessionsTab from './tabs/SessionsTab.jsx'
 import ParentHubTab from './tabs/ParentHubTab.jsx'
 import ReportCardTab from './tabs/ReportCardTab.jsx'
@@ -115,7 +116,7 @@ export default function StudentPage() {
             <AssessmentsTab studentId={id} onRefresh={refreshStudent} />
           )}
           {activeTab === 'analyses' && (
-            <AnalysesTab analyses={analyses} />
+            <AnalysisTab studentId={id} />
           )}
           {activeTab === 'sessions' && (
             <SessionsTab studentId={id} onRefresh={refreshStudent} />
@@ -563,37 +564,6 @@ function Highlights({ student, latestAnalysis, emails, reportCards }) {
         />
       </div>
     </div>
-  )
-}
-
-// ─── AI ANALYSIS TAB (lightweight — list of saved analyses) ──────────────────
-
-function AnalysesTab({ analyses }) {
-  if (analyses.length === 0) {
-    return (
-      <EmptyRow icon={<Brain className="w-4 h-4" />} text="No analyses yet. Run one from the Assessments tab." />
-    )
-  }
-  return (
-    <ListTable>
-      {analyses.map(a => (
-        <ListRow
-          key={a.id}
-          icon={<Brain className="w-3.5 h-3.5" />}
-          iconTone="purple"
-          title={`Analysis · ${a.ai_analysis?.passage_level_reached || 'Placement'}`}
-          tag={a.ai_analysis?.ufli_placement
-            ? { text: `Unit ${a.ai_analysis.ufli_placement.current_working_unit}`, tone: 'purple' }
-            : null}
-          sub={
-            a.ai_analysis?.priority_gaps?.length
-              ? `${a.ai_analysis.priority_gaps.length} priority gaps · ${(a.ai_analysis.strengths?.length || 0)} strengths`
-              : 'No detail recorded'
-          }
-          date={relativeDay(a.date || a.created_at)}
-        />
-      ))}
-    </ListTable>
   )
 }
 

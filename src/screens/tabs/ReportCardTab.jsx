@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Plus, FileText, Pencil, Trash2 } from 'lucide-react'
 import { getStudent, getAnalyses, getSessions, getReportCards, saveReportCard, deleteReportCard } from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
+import { BtnPrimary } from '../../components/v4/primitives.jsx'
 import { runPrompt } from '../../lib/claude'
 import { reportPrompt } from '../../prompts/reportPrompt'
 import { GRADE_LEVELS, GRADE_LEVEL_MAP, getStatus, getLevelPercent, SKILL_BENCHMARKS } from '../../lib/gradeLevels'
@@ -541,78 +543,97 @@ export default function ReportCardTab({ studentId }) {
   }
 
   return (
-    <div className="space-y-5">
-      <button
-        onClick={() => setView('new')}
-        className="w-full bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm"
-      >
-        📋 New Report Card
-      </button>
-
-      <div>
-        <h3 className="font-black text-black text-lg mb-4">📋 Saved Report Cards</h3>
-
-        {reports.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border-2 border-gray-100">
-            <span className="text-4xl block mb-2">📋</span>
-            <p className="text-gray-400 font-bold">No report cards yet</p>
-            <p className="text-gray-400 text-sm">Create your first report card above.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {reports.map(report => {
-              const filledSkills = Object.values(report.skillLevels || {}).filter(v => v && v !== 'not-assessed').length
-              const statusCounts = { ahead: 0, 'on-track': 0, behind: 0 }
-              SKILL_CONFIG.forEach(skill => {
-                const level = report.skillLevels?.[skill.key]
-                if (!level || level === 'not-assessed') return
-                const s = getStatus(level, student?.grade)
-                if (statusCounts[s.status] !== undefined) statusCounts[s.status]++
-              })
-
-              return (
-                <div key={report.id} className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
-                  <button
-                    onClick={() => { setSelectedReport(report); setView('view') }}
-                    className="w-full p-5 text-left flex items-center gap-4 hover:bg-gray-50 transition"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-[var(--primary-light)] flex items-center justify-center shrink-0">
-                      <span className="text-lg">📋</span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-black text-sm truncate">{report.name}</p>
-                      <p className="text-xs text-gray-400 font-semibold">{new Date(report.date).toLocaleDateString()} &middot; {filledSkills} skills rated</p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {statusCounts.ahead > 0 && <span className="text-[10px] bg-[var(--green-light)] text-[var(--green)] px-2 py-0.5 rounded-full font-bold">{statusCounts.ahead} 🟢</span>}
-                      {statusCounts['on-track'] > 0 && <span className="text-[10px] bg-[var(--gold-light)] text-[var(--orange)] px-2 py-0.5 rounded-full font-bold">{statusCounts['on-track']} 🟡</span>}
-                      {statusCounts.behind > 0 && <span className="text-[10px] bg-[var(--red-light)] text-[var(--red)] px-2 py-0.5 rounded-full font-bold">{statusCounts.behind} 🔴</span>}
-                      <span className="text-gray-300 ml-1">›</span>
-                    </div>
-                  </button>
-
-                  <div className="action-buttons flex border-t border-gray-100">
-                    <button
-                      onClick={() => { setSelectedReport(report); setView('edit') }}
-                      className="flex-1 py-2 text-[10px] font-bold text-gray-400 hover:text-[var(--primary)] hover:bg-gray-50 transition"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={async () => { if (confirm('Delete this report card?')) { await deleteReportCard(report.id); refreshReports() } }}
-                      className="flex-1 py-2 text-[10px] font-bold text-gray-400 hover:text-[var(--red)] hover:bg-gray-50 transition border-l border-gray-100"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+    <div className="space-y-4">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Report Cards</h3>
+        <BtnPrimary onClick={() => setView('new')}>
+          <Plus className="w-3.5 h-3.5" /> New Report Card
+        </BtnPrimary>
       </div>
+
+      {reports.length === 0 ? (
+        <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-10 text-center">
+          <FileText className="w-5 h-5 mx-auto mb-2 text-[var(--v4-ink-3)]" />
+          <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">No report cards yet</p>
+          <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Create your first one above.</p>
+        </div>
+      ) : (
+        <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] overflow-hidden">
+          {reports.map((report, i) => {
+            const filledSkills = Object.values(report.skillLevels || {}).filter(v => v && v !== 'not-assessed').length
+            const statusCounts = { ahead: 0, 'on-track': 0, behind: 0 }
+            SKILL_CONFIG.forEach(skill => {
+              const level = report.skillLevels?.[skill.key]
+              if (!level || level === 'not-assessed') return
+              const s = getStatus(level, student?.grade)
+              if (statusCounts[s.status] !== undefined) statusCounts[s.status]++
+            })
+
+            return (
+              <div
+                key={report.id}
+                className={`grid items-center gap-3 px-4 py-3 hover:bg-[var(--v4-surface-2)] ${i === reports.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
+                style={{ gridTemplateColumns: '32px 1fr auto auto' }}
+              >
+                <div className="w-8 h-8 rounded-md bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <button
+                  onClick={() => { setSelectedReport(report); setView('view') }}
+                  className="text-left min-w-0"
+                >
+                  <p className="text-[13.5px] font-semibold text-[var(--v4-ink)] truncate">{report.name}</p>
+                  <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">
+                    {new Date(report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {' · '}{filledSkills} skill{filledSkills !== 1 ? 's' : ''} rated
+                  </p>
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {statusCounts.ahead > 0 && (
+                    <span className="text-[10.5px] bg-[var(--v4-green-lt)] text-[var(--v4-green)] px-1.5 py-0.5 rounded font-semibold">
+                      {statusCounts.ahead} ahead
+                    </span>
+                  )}
+                  {statusCounts['on-track'] > 0 && (
+                    <span className="text-[10.5px] bg-[var(--v4-amber-lt)] text-[var(--v4-amber)] px-1.5 py-0.5 rounded font-semibold">
+                      {statusCounts['on-track']} on track
+                    </span>
+                  )}
+                  {statusCounts.behind > 0 && (
+                    <span className="text-[10.5px] bg-[var(--v4-red-lt)] text-[var(--v4-red)] px-1.5 py-0.5 rounded font-semibold">
+                      {statusCounts.behind} behind
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <IconBtn onClick={() => { setSelectedReport(report); setView('edit') }} title="Edit">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </IconBtn>
+                  <IconBtn
+                    onClick={async () => { if (confirm('Delete this report card?')) { await deleteReportCard(report.id); refreshReports() } }}
+                    title="Delete"
+                    danger
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </IconBtn>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
+  )
+}
+
+function IconBtn({ children, onClick, title, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] ${danger ? 'hover:text-[var(--v4-red)]' : 'hover:text-[var(--v4-ink)]'}`}
+    >
+      {children}
+    </button>
   )
 }

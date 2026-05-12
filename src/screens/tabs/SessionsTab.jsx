@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Plus, Sparkles, FileText, PencilLine, Target, ChevronDown, Printer, ArrowLeft } from 'lucide-react'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession, saveAnalysis } from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
@@ -8,8 +9,28 @@ import { bundleForSessionPlan } from '../../lib/dataHelpers'
 import LoadingState from '../../components/LoadingState.jsx'
 import PhotoUploader from '../../components/PhotoUploader.jsx'
 import { SESSION_TEMPLATES } from '../../lib/sessionTemplates'
+import { BtnPrimary, BtnSecondary, Card } from '../../components/v4/primitives.jsx'
 
-const quickStartInputClass = 'w-full border-2 border-gray-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent bg-white'
+const INPUT = 'w-full border border-[var(--v4-border)] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)]'
+const LABEL = 'block text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1'
+
+function relativeDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return ''
+  const now = new Date()
+  const sameYear = d.getFullYear() === now.getFullYear()
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
+}
+
+const blockBorder = {
+  'warm-up': 'border-l-[var(--v4-amber)]',
+  'phonemic_awareness': 'border-l-[var(--v4-blue)]',
+  'phonics_instruction': 'border-l-[var(--v4-purple)]',
+  'connected_reading': 'border-l-[var(--v4-green)]',
+  'encoding_spelling': 'border-l-purple-400',
+  'confidence_close': 'border-l-pink-400',
+}
 
 function QuickStartForm({ student, onGenerate }) {
   const [reading, setReading] = useState('')
@@ -19,7 +40,7 @@ function QuickStartForm({ student, onGenerate }) {
   const [sessionLen, setSessionLen] = useState(student?.session_length_minutes || 50)
 
   function handleSubmit() {
-    const context = `
+    onGenerate(`
 STUDENT: ${student.name}, ${student.grade} grade, age ${student.age}
 SESSION TYPE: ${student.session_type}
 SESSION LENGTH TODAY: ${sessionLen} minutes
@@ -35,18 +56,17 @@ Observed strengths: ${strengths || 'Not yet observed'}
 NOTES FROM LAST SESSION:
 No previous session — this is session 1. Use this as a getting-to-know-you session.
 Focus on building rapport and doing informal observation while working through activities.
-    `.trim()
-    onGenerate(context)
+    `.trim())
   }
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
-      <h3 className="font-black text-black">Quick Student Snapshot</h3>
-      <p className="text-xs text-gray-400">Answer what you can — it's OK to leave some blank. This helps generate a first session plan.</p>
+    <Card className="space-y-3">
+      <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Quick student snapshot</p>
+      <p className="text-[12px] text-[var(--v4-ink-3)]">Answer what you can. This generates a first session plan.</p>
 
       <div>
-        <label className="block text-xs font-bold text-black mb-1">Where do you think they're reading at?</label>
-        <select className={quickStartInputClass} value={reading} onChange={e => setReading(e.target.value)}>
+        <label className={LABEL}>Reading level estimate</label>
+        <select className={INPUT} value={reading} onChange={e => setReading(e.target.value)}>
           <option value="">Not sure yet</option>
           <option value="Pre-K level — not reading yet">Pre-K — not reading yet</option>
           <option value="K level — knows some letters, early CVC">K — knows some letters</option>
@@ -56,44 +76,29 @@ Focus on building rapport and doing informal observation while working through a
           <option value="3rd grade level">3rd grade level</option>
         </select>
       </div>
-
       <div>
-        <label className="block text-xs font-bold text-black mb-1">What are the main concerns?</label>
-        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={concerns} onChange={e => setConcerns(e.target.value)} placeholder="e.g., struggles to sound out new words, guesses instead of reading, can't spell..." />
+        <label className={LABEL}>Main concerns</label>
+        <textarea className={INPUT + ' h-16 resize-none'} value={concerns} onChange={e => setConcerns(e.target.value)} placeholder="Struggles to sound out new words, guesses instead of reading…" />
       </div>
-
       <div>
-        <label className="block text-xs font-bold text-black mb-1">What has been tried before?</label>
-        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={triedBefore} onChange={e => setTriedBefore(e.target.value)} placeholder="e.g., school reading support, other tutoring, parent practice at home..." />
+        <label className={LABEL}>What has been tried before</label>
+        <textarea className={INPUT + ' h-16 resize-none'} value={triedBefore} onChange={e => setTriedBefore(e.target.value)} placeholder="School reading support, other tutoring, parent practice…" />
       </div>
-
       <div>
-        <label className="block text-xs font-bold text-black mb-1">Any strengths you've noticed?</label>
-        <textarea className={quickStartInputClass + ' h-16 resize-none'} value={strengths} onChange={e => setStrengths(e.target.value)} placeholder="e.g., loves stories, knows letter names, good listener..." />
+        <label className={LABEL}>Strengths you've noticed</label>
+        <textarea className={INPUT + ' h-16 resize-none'} value={strengths} onChange={e => setStrengths(e.target.value)} placeholder="Loves stories, knows letter names, good listener…" />
       </div>
-
       <div>
-        <label className="block text-xs font-bold text-black mb-1">Session length</label>
-        <select className={quickStartInputClass} value={sessionLen} onChange={e => setSessionLen(Number(e.target.value))}>
+        <label className={LABEL}>Session length</label>
+        <select className={INPUT} value={sessionLen} onChange={e => setSessionLen(Number(e.target.value))}>
           {[30, 45, 50, 60, 65, 90].map(m => <option key={m} value={m}>{m} min</option>)}
         </select>
       </div>
-
-      <button onClick={handleSubmit} className="w-full bg-[var(--primary)] text-white py-3 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-        Generate First Session Plan
-      </button>
-    </div>
+      <BtnPrimary onClick={handleSubmit} className="w-full justify-center py-2 mt-1">
+        Generate first session plan
+      </BtnPrimary>
+    </Card>
   )
-}
-
-const blockEmoji = {
-  'warm-up': '☀️', 'phonemic_awareness': '👂', 'phonics_instruction': '🔤',
-  'connected_reading': '📖', 'encoding_spelling': '✍️', 'confidence_close': '⭐'
-}
-const blockColors = {
-  'warm-up': 'border-l-[var(--gold)]', 'phonemic_awareness': 'border-l-[var(--blue)]',
-  'phonics_instruction': 'border-l-[var(--primary)]', 'connected_reading': 'border-l-[var(--green)]',
-  'encoding_spelling': 'border-l-purple-400', 'confidence_close': 'border-l-pink-400'
 }
 
 export default function SessionsTab({ studentId, onRefresh }) {
@@ -106,8 +111,6 @@ export default function SessionsTab({ studentId, onRefresh }) {
   const analysis = latestAnalysis?.ai_analysis
 
   const [mode, setMode] = useState(null)
-
-  // Plan state
   const [sessionLength, setSessionLength] = useState(50)
   const [lastNotes, setLastNotes] = useState('')
   const [plan, setPlan] = useState(null)
@@ -115,7 +118,6 @@ export default function SessionsTab({ studentId, onRefresh }) {
   const [error, setError] = useState(null)
   const [planNotes, setPlanNotes] = useState({ tutor_notes: '', what_went_well: '', what_needs_more_work: '' })
 
-  // Log state
   const [logForm, setLogForm] = useState({
     date: new Date().toISOString().split('T')[0],
     length_minutes: 50,
@@ -123,8 +125,12 @@ export default function SessionsTab({ studentId, onRefresh }) {
     what_went_well: '',
     what_needs_more_work: '',
   })
+  const [logPhotos, setLogPhotos] = useState([])
+  const [logAnalyzing, setLogAnalyzing] = useState(false)
+  const [logError, setLogError] = useState(null)
+  const [logSaved, setLogSaved] = useState(false)
+  const [expandedSession, setExpandedSession] = useState(null)
 
-  // Sync local state defaults once student/lastSession load from the server.
   useEffect(() => {
     if (student?.session_length_minutes) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -138,19 +144,12 @@ export default function SessionsTab({ studentId, onRefresh }) {
       setLastNotes(lastSession.tutor_notes)
     }
   }, [lastSession?.tutor_notes])
-  const [logPhotos, setLogPhotos] = useState([])
-  const [logAnalyzing, setLogAnalyzing] = useState(false)
-  const [logError, setLogError] = useState(null)
-  const [logSaved, setLogSaved] = useState(false)
 
-  // Past sessions
-  const [expandedSession, setExpandedSession] = useState(null)
-
-  const currentWeek = (analysis?.week_arc || analysis?.four_week_arc)?.[Math.min(allSessions.length, ((analysis?.week_arc || analysis?.four_week_arc)?.length || 1) - 1)]
+  const weekArc = analysis?.week_arc || analysis?.four_week_arc
+  const currentWeek = weekArc?.[Math.min(allSessions.length, (weekArc?.length || 1) - 1)]
 
   async function handleGenerate() {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
       const bundle = await bundleForSessionPlan(studentId, sessionLength, lastNotes)
       const result = await runPrompt({ systemPrompt: sessionPrompt, userMessage: bundle })
@@ -176,7 +175,7 @@ export default function SessionsTab({ studentId, onRefresh }) {
       what_went_well: planNotes.what_went_well,
       what_needs_more_work: planNotes.what_needs_more_work,
       homework_assigned: false, parent_email_sent: false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
     setPlan(null)
     setMode(null)
@@ -186,12 +185,9 @@ export default function SessionsTab({ studentId, onRefresh }) {
   }
 
   async function handleLogSession() {
-    setLogAnalyzing(true)
-    setLogError(null)
+    setLogAnalyzing(true); setLogError(null)
     try {
       let assessmentId = assessment?.id || null
-
-      // If photos uploaded, run analysis and save assessment
       if (logPhotos.length > 0) {
         const images = await Promise.all(logPhotos.map(p => compressImage(p.file)))
         const engagementWeeks = student.total_sessions_planned === 999 ? 4 : (student.total_sessions_planned || 4)
@@ -210,13 +206,11 @@ Previous sessions completed: ${allSessions.length}
           date: logForm.date,
           assessment_ids: [],
           ai_analysis: parsed,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         }
         await saveAnalysis(newAnalysis)
         assessmentId = newAnalysis.id
       }
-
-      // Save session
       const sesNum = (lastSession?.ses_number || 0)
       await saveSession({
         id: crypto.randomUUID(),
@@ -229,11 +223,9 @@ Previous sessions completed: ${allSessions.length}
         tutor_notes: logForm.tutor_notes,
         what_went_well: logForm.what_went_well,
         what_needs_more_work: logForm.what_needs_more_work,
-        homework_assigned: false,
-        parent_email_sent: false,
-        created_at: new Date().toISOString()
+        homework_assigned: false, parent_email_sent: false,
+        created_at: new Date().toISOString(),
       })
-
       setLogSaved(true)
       refreshSessions()
       onRefresh?.()
@@ -247,43 +239,39 @@ Previous sessions completed: ${allSessions.length}
     }
   }
 
-  // Zero-assessment state — offer intake session or quick start
   if (!student) return null
+
+  // Zero-assessment state
   if (!assessment && !analysis) {
     return (
       <div className="space-y-4">
-        <h3 className="font-black text-black text-lg">Get Started</h3>
-        <p className="text-sm text-gray-500">No assessments yet. Choose how to start your first session:</p>
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Get started</h3>
+        <p className="text-[12.5px] text-[var(--v4-ink-2)]">No assessments yet. Choose how to start your first session.</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button
+        <div className="grid grid-cols-2 gap-2.5">
+          <ActionTile
+            icon={<ClipboardIcon />}
+            title="Start Intake Session"
+            sub="Run the full intake, then get an AI plan."
             onClick={() => setMode('intake')}
-            className="bg-white rounded-2xl border-2 border-[var(--primary)] p-5 text-left hover:shadow-md transition-all"
-          >
-            <span className="text-2xl block mb-2">📋</span>
-            <p className="font-black text-black text-sm">Start Intake Session</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Run the full intake assessment, then get an AI session plan based on the results.</p>
-          </button>
-          <button
+          />
+          <ActionTile
+            icon={<Sparkles className="w-4 h-4" />}
+            title="Quick Start"
+            sub="Answer a few questions to get a plan."
             onClick={() => setMode('quick-start')}
-            className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
-          >
-            <span className="text-2xl block mb-2">⚡</span>
-            <p className="font-black text-black text-sm">Quick Start</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Answer a few quick questions about the student and jump straight into a session plan.</p>
-          </button>
+          />
         </div>
 
         {mode === 'intake' && (
-          <div className="bg-[var(--primary-light)] rounded-2xl p-5 border-2 border-[var(--primary)]">
-            <p className="text-sm font-bold text-[var(--primary)] mb-2">Go to the Assessments tab to complete the intake assessment first, then come back here to plan your session.</p>
+          <div className="bg-[var(--v4-blue-lt)] rounded-md p-3 text-[12.5px] text-[var(--v4-blue)] font-medium">
+            Go to the Assessments tab to complete the intake assessment first, then come back here.
           </div>
         )}
 
         {mode === 'quick-start' && (
           <QuickStartForm student={student} onGenerate={async (context) => {
-            setLoading(true)
-            setError(null)
+            setLoading(true); setError(null)
             try {
               const result = await runPrompt({ systemPrompt: sessionPrompt, userMessage: context })
               setPlan(JSON.parse(result))
@@ -296,7 +284,7 @@ Previous sessions completed: ${allSessions.length}
           }} />
         )}
 
-        {error && <div className="rounded-2xl bg-[var(--red-light)] p-3 text-sm text-[var(--red)] font-bold">{error}</div>}
+        {error && <Banner tone="red">{error}</Banner>}
       </div>
     )
   }
@@ -304,271 +292,221 @@ Previous sessions completed: ${allSessions.length}
   if (loading) return <LoadingState messages={['🗓️ Building your session plan...', '🎯 Selecting activities...', '📘 Matching to UFLI scope...']} />
   if (logAnalyzing) return <LoadingState messages={['📝 Saving session...', '📸 Analyzing assessment photos...', '💾 Wrapping up...']} />
 
-  const inputClass = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent bg-white'
-
   return (
-    <div className="space-y-5">
-      {/* Session context panel */}
-      {mode === null && !plan && analysis && (
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-5 space-y-3">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Session {allSessions.length + 1} Context</p>
+    <div className="space-y-4">
+      {/* HEADER */}
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Sessions</h3>
+        {!mode && !plan && (
+          <div className="flex items-center gap-2">
+            <BtnSecondary onClick={() => setMode('log')}><PencilLine className="w-3.5 h-3.5" /> Log</BtnSecondary>
+            <BtnSecondary onClick={() => setMode('template')}><FileText className="w-3.5 h-3.5" /> Template</BtnSecondary>
+            <BtnPrimary onClick={() => setMode('plan')}><Plus className="w-3.5 h-3.5" /> Plan Session</BtnPrimary>
+          </div>
+        )}
+      </div>
 
-          {/* Current focus from week arc */}
+      {/* THIS WEEK CONTEXT */}
+      {!mode && !plan && analysis && (
+        <Card className="space-y-3">
+          <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">
+            Session {allSessions.length + 1} context
+          </p>
           {currentWeek && (
-            <div className="bg-[var(--blue-light)] rounded-xl p-3 flex items-start gap-2.5">
-              <span className="text-lg">🎯</span>
+            <div className="bg-[var(--v4-blue-lt)] rounded-md p-3 flex items-start gap-2.5">
+              <Target className="w-4 h-4 text-[var(--v4-blue)] mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-[var(--blue)]">This Week's Focus</p>
-                <p className="text-sm font-bold text-black">{currentWeek.focus}</p>
-                <p className="text-[11px] text-gray-500">{currentWeek.activity_type}</p>
+                <p className="text-[11.5px] font-semibold text-[var(--v4-blue)]">This week's focus</p>
+                <p className="text-[13.5px] font-semibold text-[var(--v4-ink)]">{currentWeek.focus}</p>
+                <p className="text-[11.5px] text-[var(--v4-ink-3)]">{currentWeek.activity_type}</p>
               </div>
             </div>
           )}
-
           <div className="grid grid-cols-2 gap-3">
-            {/* UFLI placement */}
             {analysis.ufli_placement && (
-              <div className="bg-[var(--primary-light)] rounded-xl p-3">
-                <p className="text-[10px] font-bold text-[var(--primary)] uppercase">UFLI Unit</p>
-                <p className="text-lg font-black text-[var(--primary)]">{analysis.ufli_placement.current_working_unit}</p>
-                <p className="text-[10px] text-gray-500">{analysis.ufli_placement.current_unit_name}</p>
+              <div className="bg-[var(--v4-purple-lt)] rounded-md p-3">
+                <p className="text-[10.5px] font-semibold text-[var(--v4-purple)] uppercase tracking-[0.6px]">UFLI Unit</p>
+                <p className="text-[16px] font-bold text-[var(--v4-purple)]">{analysis.ufli_placement.current_working_unit}</p>
+                <p className="text-[10.5px] text-[var(--v4-ink-3)]">{analysis.ufli_placement.current_unit_name}</p>
               </div>
             )}
-
-            {/* Last session notes */}
             {lastSession && (
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Last Session</p>
-                <p className="text-xs text-gray-700 mt-0.5 line-clamp-2">{lastSession.what_needs_more_work || lastSession.tutor_notes || 'No notes'}</p>
+              <div className="bg-[var(--v4-surface-2)] rounded-md p-3">
+                <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Last session</p>
+                <p className="text-[12px] text-[var(--v4-ink-2)] mt-0.5 line-clamp-2">{lastSession.what_needs_more_work || lastSession.tutor_notes || 'No notes'}</p>
               </div>
             )}
           </div>
-
-          {/* Priority gaps */}
           {analysis.priority_gaps?.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              <span className="text-[10px] font-bold text-gray-400 uppercase mr-1">Gaps:</span>
+              <span className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mr-1">Gaps</span>
               {analysis.priority_gaps.map((g, i) => (
-                <span key={i} className="text-[10px] bg-[var(--red-light)] text-[var(--red)] px-2 py-0.5 rounded-full font-bold">{g.gap}</span>
+                <span key={i} className="text-[10.5px] bg-[var(--v4-red-lt)] text-[var(--v4-red)] px-1.5 py-0.5 rounded font-semibold">{g.gap}</span>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
-      {/* Action tiles */}
-      {mode === null && !plan && (
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => setMode('plan')}
-            className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
-          >
-            <span className="text-2xl block mb-2">✨</span>
-            <p className="font-black text-black text-sm">AI Plan</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Auto-generated plan</p>
-          </button>
-          <button
-            onClick={() => setMode('template')}
-            className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
-          >
-            <span className="text-2xl block mb-2">📄</span>
-            <p className="font-black text-black text-sm">Template</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Pre-built lesson plans</p>
-          </button>
-          <button
-            onClick={() => setMode('log')}
-            className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
-          >
-            <span className="text-2xl block mb-2">📝</span>
-            <p className="font-black text-black text-sm">Log</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Record a past session</p>
-          </button>
-        </div>
-      )}
-
-      {/* ── PLAN MODE ── */}
+      {/* PLAN MODE */}
       {mode === 'plan' && !plan && (
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-black">🗓️ Plan Session {allSessions.length + 1}</h3>
-            <button onClick={() => setMode(null)} className="text-xs font-bold text-gray-400 hover:text-black">← Back</button>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        <Card className="space-y-3">
+          <ModeHeader title={`Plan Session ${allSessions.length + 1}`} onBack={() => setMode(null)} />
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Length</label>
-              <select className={inputClass} value={sessionLength} onChange={e => setSessionLength(Number(e.target.value))}>
+              <label className={LABEL}>Length</label>
+              <select className={INPUT} value={sessionLength} onChange={e => setSessionLength(Number(e.target.value))}>
                 {[30, 45, 50, 60, 65, 90].map(m => <option key={m} value={m}>{m} min</option>)}
               </select>
             </div>
             <div className="flex items-end">
-              <button onClick={handleGenerate} className="w-full bg-[var(--primary)] text-white py-2.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-                Generate Plan
-              </button>
+              <BtnPrimary onClick={handleGenerate} className="w-full justify-center py-2"><Sparkles className="w-3.5 h-3.5" /> Generate</BtnPrimary>
             </div>
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Notes (optional)</label>
-            <textarea className={inputClass + ' h-16'} value={lastNotes} onChange={e => setLastNotes(e.target.value)} placeholder="Carry-forward from last session..." />
+            <label className={LABEL}>Carry-forward notes (optional)</label>
+            <textarea className={INPUT + ' h-16 resize-none'} value={lastNotes} onChange={e => setLastNotes(e.target.value)} placeholder="From last session…" />
           </div>
-          {error && <div className="rounded-xl bg-[var(--red-light)] p-3 text-sm text-[var(--red)] font-bold">{error}</div>}
-        </div>
+          {error && <Banner tone="red">{error}</Banner>}
+        </Card>
       )}
 
-      {/* ── GENERATED PLAN ── */}
+      {/* GENERATED PLAN */}
       {plan && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-black text-lg">🗓️ Session Plan</h3>
-            <button onClick={() => { setPlan(null); setMode(null) }} className="text-xs font-bold text-gray-400 hover:text-black">← Back</button>
+          <ModeHeader title="Session Plan" onBack={() => { setPlan(null); setMode(null) }} />
+
+          <div className="bg-[var(--v4-purple-lt)] rounded-md p-4 border border-[var(--v4-purple-lt)]">
+            <p className="text-[13.5px] font-semibold text-[var(--v4-purple)]"><Target className="w-3.5 h-3.5 inline mr-1.5" />{plan.session_goal}</p>
+            <span className="text-[10.5px] bg-white text-[var(--v4-purple)] px-1.5 py-0.5 rounded font-semibold mt-2 inline-block">
+              Unit {plan.ufli_focus_unit} — {plan.ufli_focus_unit_name}
+            </span>
           </div>
 
-          <div className="bg-[var(--primary-light)] rounded-2xl border-2 border-[var(--primary)] p-5">
-            <p className="text-sm font-black text-[var(--primary)]">🎯 {plan.session_goal}</p>
-            <span className="text-xs bg-white text-[var(--primary)] px-2.5 py-0.5 rounded-full font-bold mt-2 inline-block">📘 Unit {plan.ufli_focus_unit} — {plan.ufli_focus_unit_name}</span>
-          </div>
-
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {plan.blocks.map((block, i) => (
-              <div key={i} className={`bg-white rounded-2xl border-2 border-gray-100 border-l-4 ${blockColors[block.type] || 'border-l-gray-300'} p-4`}>
-                <div className="flex justify-between items-start mb-1.5">
-                  <p className="font-black text-black text-sm">{blockEmoji[block.type] || '📌'} {block.name}</p>
-                  <span className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded-full">{block.time_start}–{block.time_end}</span>
+              <Card key={i} padding="p-3" className={`border-l-4 ${blockBorder[block.type] || 'border-l-[var(--v4-ink-4)]'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{block.name}</p>
+                  <span className="text-[10.5px] text-[var(--v4-ink-3)] font-semibold bg-[var(--v4-surface-3)] px-1.5 py-0.5 rounded">{block.time_start}–{block.time_end}</span>
                 </div>
-                <ul className="space-y-0.5 mb-1.5">
+                <ul className="space-y-0.5 mb-1">
                   {(Array.isArray(block.what_to_do) ? block.what_to_do : [block.what_to_do]).map((step, j) => (
-                    <li key={j} className="text-sm text-gray-700 flex gap-2"><span className="text-gray-300">&bull;</span>{step}</li>
+                    <li key={j} className="text-[12.5px] text-[var(--v4-ink-2)] flex gap-1.5"><span className="text-[var(--v4-ink-4)]">•</span>{step}</li>
                   ))}
                 </ul>
                 {block.example_words_or_prompts?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1.5">
+                  <div className="flex flex-wrap gap-1 mt-1">
                     {block.example_words_or_prompts.map((w, j) => (
-                      <span key={j} className="text-[10px] bg-[var(--blue-light)] text-[var(--blue)] px-2 py-0.5 rounded-full font-bold">{w}</span>
+                      <span key={j} className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">{w}</span>
                     ))}
                   </div>
                 )}
-                {block.watch_for && <p className="text-xs text-[var(--orange)] mt-1 font-bold">⚠️ {block.watch_for}</p>}
-              </div>
+                {block.watch_for && <p className="text-[11.5px] text-[var(--v4-amber)] mt-1 font-semibold">⚠ {block.watch_for}</p>}
+              </Card>
             ))}
           </div>
 
           {plan.prep_checklist?.length > 0 && (
-            <div className="bg-white rounded-2xl border-2 border-gray-100 p-4">
-              <p className="text-xs font-black text-black mb-2">✅ Prep</p>
+            <Card padding="p-3">
+              <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1.5">Prep</p>
               <ul className="space-y-1">
                 {plan.prep_checklist.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2 items-center"><input type="checkbox" className="w-4 h-4 accent-[var(--primary)]" /> {item}</li>
+                  <li key={i} className="text-[12.5px] text-[var(--v4-ink-2)] flex gap-2 items-center">
+                    <input type="checkbox" className="w-3.5 h-3.5 accent-[var(--v4-ink)]" /> {item}
+                  </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           )}
 
           {plan.tutor_reminder && (
-            <div className="bg-[var(--gold-light)] rounded-2xl border-2 border-yellow-300 p-4">
-              <p className="text-xs font-black text-[var(--orange)]">💡 Reminder</p>
-              <p className="text-sm text-gray-800 mt-0.5">{plan.tutor_reminder}</p>
+            <div className="bg-[var(--v4-amber-lt)] rounded-md p-3 border border-[var(--v4-amber-lt)]">
+              <p className="text-[10.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Reminder</p>
+              <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{plan.tutor_reminder}</p>
             </div>
           )}
 
-          {/* Teacher feedback */}
-          <div className="bg-white rounded-2xl border-2 border-gray-100 p-5 space-y-4">
-            <h3 className="font-black text-black text-sm">📝 Session Feedback</h3>
+          <Card padding="p-3" className="space-y-2.5">
+            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Session Feedback</p>
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Session Notes</label>
-              <textarea className={inputClass + ' h-16'} value={planNotes.tutor_notes} onChange={e => setPlanNotes(n => ({ ...n, tutor_notes: e.target.value }))} placeholder="What did you cover today?" />
+              <label className={LABEL}>Notes</label>
+              <textarea className={INPUT + ' h-14 resize-none'} value={planNotes.tutor_notes} onChange={e => setPlanNotes(n => ({ ...n, tutor_notes: e.target.value }))} placeholder="What did you cover today?" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">💪 What went well</label>
-                <textarea className={inputClass + ' h-16'} value={planNotes.what_went_well} onChange={e => setPlanNotes(n => ({ ...n, what_went_well: e.target.value }))} placeholder="Wins from today..." />
+                <label className={LABEL}>What went well</label>
+                <textarea className={INPUT + ' h-14 resize-none'} value={planNotes.what_went_well} onChange={e => setPlanNotes(n => ({ ...n, what_went_well: e.target.value }))} placeholder="Wins from today…" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">🎯 Needs more work</label>
-                <textarea className={inputClass + ' h-16'} value={planNotes.what_needs_more_work} onChange={e => setPlanNotes(n => ({ ...n, what_needs_more_work: e.target.value }))} placeholder="What to focus on next..." />
+                <label className={LABEL}>Needs more work</label>
+                <textarea className={INPUT + ' h-14 resize-none'} value={planNotes.what_needs_more_work} onChange={e => setPlanNotes(n => ({ ...n, what_needs_more_work: e.target.value }))} placeholder="What to focus on next…" />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="flex gap-3">
-            <button onClick={() => window.print()} className="flex-1 bg-white border-2 border-gray-100 py-3 rounded-full font-bold text-black hover:border-[var(--primary)] transition">🖨️ Print</button>
-            <button onClick={handleSavePlan} className="flex-1 bg-[var(--primary)] text-white py-3 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">✓ Save Session</button>
+          <div className="flex items-center gap-2">
+            <BtnSecondary onClick={() => window.print()}><Printer className="w-3.5 h-3.5" /> Print</BtnSecondary>
+            <BtnPrimary onClick={handleSavePlan} className="ml-auto">Save Session</BtnPrimary>
           </div>
         </div>
       )}
 
-      {/* ── LOG MODE ── */}
+      {/* LOG MODE */}
       {mode === 'log' && !plan && (
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-black">📝 Log Session {allSessions.length + 1}</h3>
-            <button onClick={() => setMode(null)} className="text-xs font-bold text-gray-400 hover:text-black">← Back</button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <Card className="space-y-3">
+          <ModeHeader title={`Log Session ${allSessions.length + 1}`} onBack={() => setMode(null)} />
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Date</label>
-              <input className={inputClass} type="date" value={logForm.date} onChange={e => setLogForm(f => ({ ...f, date: e.target.value }))} />
+              <label className={LABEL}>Date</label>
+              <input className={INPUT} type="date" value={logForm.date} onChange={e => setLogForm(f => ({ ...f, date: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Length</label>
-              <select className={inputClass} value={logForm.length_minutes} onChange={e => setLogForm(f => ({ ...f, length_minutes: Number(e.target.value) }))}>
+              <label className={LABEL}>Length</label>
+              <select className={INPUT} value={logForm.length_minutes} onChange={e => setLogForm(f => ({ ...f, length_minutes: Number(e.target.value) }))}>
                 {[30, 45, 50, 60, 65, 90].map(m => <option key={m} value={m}>{m} min</option>)}
               </select>
             </div>
           </div>
-
           <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">Session Notes</label>
-            <textarea className={inputClass + ' h-20'} value={logForm.tutor_notes} onChange={e => setLogForm(f => ({ ...f, tutor_notes: e.target.value }))} placeholder="What did you cover today?" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">💪 What went well</label>
-              <textarea className={inputClass + ' h-20'} value={logForm.what_went_well} onChange={e => setLogForm(f => ({ ...f, what_went_well: e.target.value }))} placeholder="Wins from today..." />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">🎯 Needs more work</label>
-              <textarea className={inputClass + ' h-20'} value={logForm.what_needs_more_work} onChange={e => setLogForm(f => ({ ...f, what_needs_more_work: e.target.value }))} placeholder="What to focus on next..." />
-            </div>
-          </div>
-
-          {/* Assessment photo upload */}
-          <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">📸 Assessment Photos (optional)</label>
-            <p className="text-xs text-gray-400 mb-3">Upload photos of any assessments from this session. They'll be analyzed automatically.</p>
-            <PhotoUploader photos={logPhotos} setPhotos={setLogPhotos} />
-          </div>
-
-          {logError && <div className="rounded-xl bg-[var(--red-light)] p-3 text-sm text-[var(--red)] font-bold">{logError}</div>}
-
-          {logSaved ? (
-            <div className="bg-[var(--green-light)] text-[var(--green)] rounded-xl p-3 text-sm font-bold text-center">
-              ✓ Session logged!{logPhotos.length > 0 ? ' Assessment saved.' : ''}
-            </div>
-          ) : (
-            <button
-              onClick={handleLogSession}
-              className="w-full bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm"
-            >
-              {logPhotos.length > 0 ? '📝 Log Session & Analyze Assessment' : '📝 Log Session'}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ── TEMPLATE PICKER ── */}
-      {mode === 'template' && !plan && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-black text-lg">📄 Lesson Plan Templates</h3>
-            <button onClick={() => setMode(null)} className="text-xs font-bold text-gray-400 hover:text-black">← Back</button>
+            <label className={LABEL}>Notes</label>
+            <textarea className={INPUT + ' h-16 resize-none'} value={logForm.tutor_notes} onChange={e => setLogForm(f => ({ ...f, tutor_notes: e.target.value }))} placeholder="What did you cover today?" />
           </div>
           <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL}>What went well</label>
+              <textarea className={INPUT + ' h-16 resize-none'} value={logForm.what_went_well} onChange={e => setLogForm(f => ({ ...f, what_went_well: e.target.value }))} placeholder="Wins from today…" />
+            </div>
+            <div>
+              <label className={LABEL}>Needs more work</label>
+              <textarea className={INPUT + ' h-16 resize-none'} value={logForm.what_needs_more_work} onChange={e => setLogForm(f => ({ ...f, what_needs_more_work: e.target.value }))} placeholder="What to focus on next…" />
+            </div>
+          </div>
+          <div>
+            <label className={LABEL}>Assessment photos (optional)</label>
+            <p className="text-[11.5px] text-[var(--v4-ink-3)] mb-2">Upload photos of any assessments from this session — they'll be analyzed automatically.</p>
+            <PhotoUploader photos={logPhotos} setPhotos={setLogPhotos} />
+          </div>
+          {logError && <Banner tone="red">{logError}</Banner>}
+          {logSaved ? (
+            <Banner tone="green">Session logged.{logPhotos.length > 0 ? ' Assessment saved.' : ''}</Banner>
+          ) : (
+            <BtnPrimary onClick={handleLogSession} className="w-full justify-center py-2">
+              {logPhotos.length > 0 ? 'Log Session & Analyze' : 'Log Session'}
+            </BtnPrimary>
+          )}
+        </Card>
+      )}
+
+      {/* TEMPLATE PICKER */}
+      {mode === 'template' && !plan && (
+        <div className="space-y-3">
+          <ModeHeader title="Lesson Plan Templates" onBack={() => setMode(null)} />
+          <div className="grid grid-cols-2 gap-2.5">
             {SESSION_TEMPLATES.map(tmpl => (
               <button
                 key={tmpl.id}
                 onClick={() => {
-                  // Load template into plan, filling in student's UFLI data
                   const ufli = analysis?.ufli_placement
                   setPlan({
                     ...tmpl,
@@ -577,102 +515,132 @@ Previous sessions completed: ${allSessions.length}
                       ? (ufli?.current_unit_name || tmpl.ufli_focus_unit_name)
                       : tmpl.ufli_focus_unit_name,
                   })
-                  setMode('template')
                 }}
-                className="bg-white rounded-2xl border-2 border-gray-100 p-5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
+                className="bg-[var(--v4-surface)] rounded-[10px] border border-[var(--v4-border)] p-4 text-left hover:border-[var(--v4-border-2)] hover:shadow-sm transition-all"
               >
-                <span className="text-2xl block mb-2">{tmpl.icon}</span>
-                <p className="font-black text-black text-sm">{tmpl.name}</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">{tmpl.description}</p>
+                <span className="text-xl block mb-1">{tmpl.icon}</span>
+                <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{tmpl.name}</p>
+                <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">{tmpl.description}</p>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── PAST SESSIONS ── */}
-      <div>
-        <h3 className="font-black text-black text-lg mb-3">📚 Past Sessions</h3>
-        {allSessions.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-2xl border-2 border-gray-100">
-            <span className="text-3xl block mb-2">🗓️</span>
-            <p className="text-gray-400 font-bold text-sm">No sessions yet</p>
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {allSessions.map(session => {
-              const isExpanded = expandedSession === session.id
-              const sa = allAssessments.find(a => a.id === session.assessment_id)?.ai_analysis
-                || latestAnalysis?.ai_analysis
-              const hasNotes = session.tutor_notes || session.what_went_well || session.what_needs_more_work
-              return (
-                <div key={session.id} className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
-                  <button
-                    onClick={() => setExpandedSession(isExpanded ? null : session.id)}
-                    className="w-full p-4 text-left flex items-center gap-3 hover:bg-gray-50 transition"
-                  >
-                    <div className="bg-[var(--primary-light)] text-[var(--primary)] w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
-                      <span className="font-black">{session.ses_number}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-black text-sm">Session {session.ses_number}</p>
-                      <p className="text-[11px] text-gray-400 font-semibold">{session.date} &middot; {session.length_minutes} min</p>
-                    </div>
-                    <div className="flex gap-1.5 items-center shrink-0">
-                      {session.ufli_unit_covered && <span className="text-[10px] bg-[var(--blue-light)] text-[var(--blue)] px-2 py-0.5 rounded-full font-bold">Unit {session.ufli_unit_covered}</span>}
-                      {hasNotes && <span className="text-[10px] bg-[var(--green-light)] text-[var(--green)] px-2 py-0.5 rounded-full font-bold">📝</span>}
-                      {sa && <span className="text-[10px] bg-[var(--primary-light)] text-[var(--primary)] px-2 py-0.5 rounded-full font-bold">📊</span>}
-                      <span className={`text-gray-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>▾</span>
-                    </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
-                      {session.tutor_notes && (
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase">📝 Notes</p>
-                          <p className="text-sm text-gray-700 mt-0.5">{session.tutor_notes}</p>
-                        </div>
-                      )}
-                      {session.what_went_well && (
-                        <div className="bg-[var(--green-light)] rounded-xl p-3">
-                          <p className="text-[10px] font-bold text-[var(--green)]">💪 Went Well</p>
-                          <p className="text-sm text-gray-800 mt-0.5">{session.what_went_well}</p>
-                        </div>
-                      )}
-                      {session.what_needs_more_work && (
-                        <div className="bg-[var(--orange-light)] rounded-xl p-3">
-                          <p className="text-[10px] font-bold text-[var(--orange)]">🎯 Needs Work</p>
-                          <p className="text-sm text-gray-800 mt-0.5">{session.what_needs_more_work}</p>
-                        </div>
-                      )}
-                      {sa && (
-                        <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase">📊 Assessment</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[10px] bg-[var(--blue-light)] text-[var(--blue)] px-2 py-0.5 rounded-full font-bold">📖 {sa.passage_level_reached}</span>
-                            <span className="text-[10px] font-bold" style={{ color: sa.fluency_estimate_pct >= 80 ? 'var(--green)' : 'var(--orange)' }}>🎯 {sa.fluency_estimate_pct}%</span>
-                            {sa.ufli_placement && <span className="text-[10px] bg-[var(--primary-light)] text-[var(--primary)] px-2 py-0.5 rounded-full font-bold">📘 Unit {sa.ufli_placement.current_working_unit}</span>}
+      {/* PAST SESSIONS */}
+      {!plan && (
+        <div>
+          <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2">Past Sessions</p>
+          {allSessions.length === 0 ? (
+            <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-8 text-center">
+              <p className="text-[12.5px] text-[var(--v4-ink-3)]">No sessions yet</p>
+            </div>
+          ) : (
+            <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] overflow-hidden">
+              {allSessions.map((session, i) => {
+                const isExpanded = expandedSession === session.id
+                const sa = allAssessments.find(a => a.id === session.assessment_id)?.ai_analysis || latestAnalysis?.ai_analysis
+                const hasNotes = session.tutor_notes || session.what_went_well || session.what_needs_more_work
+                return (
+                  <div key={session.id} className={i === allSessions.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}>
+                    <button
+                      onClick={() => setExpandedSession(isExpanded ? null : session.id)}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-[var(--v4-surface-2)]"
+                    >
+                      <div className="w-8 h-8 rounded-md bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] flex items-center justify-center shrink-0 font-bold text-[12px]">
+                        {session.ses_number}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-[var(--v4-ink)]">Session {session.ses_number}</p>
+                        <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">{relativeDate(session.date)} · {session.length_minutes} min</p>
+                      </div>
+                      <div className="flex gap-1.5 items-center shrink-0">
+                        {session.ufli_unit_covered && <span className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">Unit {session.ufli_unit_covered}</span>}
+                        {hasNotes && <span className="text-[10.5px] bg-[var(--v4-green-lt)] text-[var(--v4-green)] px-1.5 py-0.5 rounded font-semibold">Notes</span>}
+                        <ChevronDown className={`w-3.5 h-3.5 text-[var(--v4-ink-4)] transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pl-[60px] bg-[var(--v4-surface-2)] border-t border-[var(--v4-border)] pt-3 space-y-2.5">
+                        {session.tutor_notes && (
+                          <div>
+                            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Notes</p>
+                            <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{session.tutor_notes}</p>
                           </div>
-                          {sa.strengths?.length > 0 && (
-                            <ul className="space-y-0.5 mt-1">
-                              {sa.strengths.slice(0, 3).map((s, i) => (
-                                <li key={i} className="text-xs text-gray-600 flex gap-1.5"><span className="text-[var(--green)]">✓</span>{s}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      )}
-                      {!hasNotes && !sa && (
-                        <p className="text-sm text-gray-400 text-center py-2">No notes recorded.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                        )}
+                        {session.what_went_well && (
+                          <div className="bg-[var(--v4-green-lt)] rounded-md p-2.5">
+                            <p className="text-[10.5px] font-semibold text-[var(--v4-green)] uppercase tracking-[0.6px]">Went well</p>
+                            <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{session.what_went_well}</p>
+                          </div>
+                        )}
+                        {session.what_needs_more_work && (
+                          <div className="bg-[var(--v4-amber-lt)] rounded-md p-2.5">
+                            <p className="text-[10.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Needs work</p>
+                            <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{session.what_needs_more_work}</p>
+                          </div>
+                        )}
+                        {sa && (
+                          <div className="bg-white border border-[var(--v4-border)] rounded-md p-2.5 space-y-1.5">
+                            <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Assessment</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              <span className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">{sa.passage_level_reached}</span>
+                              {sa.fluency_estimate_pct != null && (
+                                <span className="text-[10.5px] font-semibold" style={{ color: sa.fluency_estimate_pct >= 80 ? 'var(--v4-green)' : 'var(--v4-amber)' }}>{sa.fluency_estimate_pct}%</span>
+                              )}
+                              {sa.ufli_placement && <span className="text-[10.5px] bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] px-1.5 py-0.5 rounded font-semibold">Unit {sa.ufli_placement.current_working_unit}</span>}
+                            </div>
+                          </div>
+                        )}
+                        {!hasNotes && !sa && (
+                          <p className="text-[12.5px] text-[var(--v4-ink-3)] text-center">No notes recorded.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
+}
+
+function ModeHeader({ title, onBack }) {
+  return (
+    <div className="flex items-center justify-between">
+      <p className="text-[14px] font-semibold text-[var(--v4-ink)]">{title}</p>
+      <button onClick={onBack} className="flex items-center gap-1 text-[11.5px] text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] font-medium">
+        <ArrowLeft className="w-3 h-3" /> Back
+      </button>
+    </div>
+  )
+}
+
+function ActionTile({ icon, title, sub, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-[var(--v4-surface)] rounded-[10px] border border-[var(--v4-border)] p-4 text-left hover:border-[var(--v4-border-2)] transition-colors"
+    >
+      <div className="w-7 h-7 rounded-md bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)] flex items-center justify-center mb-2">{icon}</div>
+      <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{title}</p>
+      <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">{sub}</p>
+    </button>
+  )
+}
+
+function ClipboardIcon() {
+  return <FileText className="w-4 h-4" />
+}
+
+function Banner({ tone, children }) {
+  const tones = {
+    red:   'bg-[var(--v4-red-lt)] text-[var(--v4-red)]',
+    green: 'bg-[var(--v4-green-lt)] text-[var(--v4-green)]',
+    amber: 'bg-[var(--v4-amber-lt)] text-[var(--v4-amber)]',
+  }
+  return <div className={`rounded-md px-3 py-2 text-[12.5px] font-medium ${tones[tone]}`}>{children}</div>
 }
