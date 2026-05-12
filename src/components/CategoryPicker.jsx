@@ -1,3 +1,4 @@
+import { ArrowRight, X } from 'lucide-react'
 import { SKILLS_CATEGORIES } from '../lib/skillsCategories'
 
 const ICONS = {
@@ -15,30 +16,52 @@ const ICONS = {
   'writing-written-expression': '📝',
 }
 
+const TONES = ['blue', 'purple', 'green', 'amber', 'teal']
+function toneFor(id) {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return TONES[h % TONES.length]
+}
+const TONE_BG = {
+  blue:   'bg-[var(--v4-blue-lt)]',
+  purple: 'bg-[var(--v4-purple-lt)]',
+  green:  'bg-[var(--v4-green-lt)]',
+  amber:  'bg-[var(--v4-amber-lt)]',
+  teal:   'bg-[var(--v4-teal-lt)]',
+}
+
 export default function CategoryPicker({ onSelect, onCancel }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-black text-black text-lg">Choose Assessment Type</h3>
-        <button onClick={onCancel} className="text-xs font-bold text-gray-400 hover:text-black transition">Cancel</button>
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Choose Assessment Type</h3>
+        <button onClick={onCancel} className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]" title="Cancel">
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {SKILLS_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => onSelect(cat.id)}
-            className="bg-white rounded-2xl border-2 border-gray-100 p-4 text-left hover:border-[var(--primary)] hover:shadow-md transition-all"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{ICONS[cat.id] || '📋'}</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-black text-black text-sm">{cat.label}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{cat.desc}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {SKILLS_CATEGORIES.map(cat => {
+          const tone = toneFor(cat.id)
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelect(cat.id)}
+              className="group bg-[var(--v4-surface)] rounded-[10px] border border-[var(--v4-border)] p-4 text-left hover:border-[var(--v4-border-2)] transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-9 h-9 rounded-md flex items-center justify-center text-lg shrink-0 ${TONE_BG[tone]}`}>
+                  {ICONS[cat.id] || '📋'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13.5px] font-semibold text-[var(--v4-ink)]">{cat.label}</p>
+                  <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5 leading-tight">{cat.desc}</p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-[var(--v4-ink-4)] group-hover:text-[var(--v4-ink-2)] mt-1 shrink-0" />
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

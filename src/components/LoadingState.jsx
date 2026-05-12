@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 
 const defaultMessages = [
-  '📸 Reading the assessment photos...',
-  '🔍 Checking against UFLI scope and sequence...',
-  '🧩 Identifying phonics patterns...',
-  '📋 Building the 4-week plan...'
+  '📸 Reading the assessment photos…',
+  '🔍 Checking against UFLI scope and sequence…',
+  '🧩 Identifying phonics patterns…',
+  '📋 Building the 4-week plan…',
 ]
 
 export default function LoadingState({ messages = defaultMessages }) {
@@ -18,12 +18,11 @@ export default function LoadingState({ messages = defaultMessages }) {
   }, [messages.length])
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-5">
+    <div className="flex flex-col items-center justify-center py-16 gap-4">
       <div className="relative">
-        <div className="w-16 h-16 border-4 border-gray-100 border-t-[var(--primary)] rounded-full animate-spin" />
-        <span className="absolute inset-0 flex items-center justify-center text-2xl">📖</span>
+        <div className="w-12 h-12 border-[3px] border-[var(--v4-surface-3)] border-t-[var(--v4-ink)] rounded-full animate-spin" />
       </div>
-      <p className="text-gray-500 text-sm font-medium animate-pulse">{messages[index]}</p>
+      <p className="text-[var(--v4-ink-3)] text-[12.5px] font-medium animate-pulse">{messages[index]}</p>
     </div>
   )
 }
