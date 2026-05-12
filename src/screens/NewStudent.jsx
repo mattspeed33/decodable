@@ -13,6 +13,7 @@ export default function NewStudent() {
     name: '',
     grade: '1st',
     age: '',
+    status: 'active',
     session_type: '1:1',
     session_length_minutes: 50,
     total_sessions_planned: 4,
@@ -86,7 +87,14 @@ export default function NewStudent() {
 
         <Card className="space-y-3">
           <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Session</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={LABEL}>Status</label>
+              <select className={INPUT} value={form.status} onChange={e => update('status', e.target.value)}>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
             <div>
               <label className={LABEL}>Type</label>
               <select className={INPUT} value={form.session_type} onChange={e => update('session_type', e.target.value)}>

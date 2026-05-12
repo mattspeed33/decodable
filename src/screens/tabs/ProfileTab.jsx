@@ -116,6 +116,7 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
             <div><p className={labelClass}>Name</p><p className={valueClass}>{student.name}</p></div>
             <div><p className={labelClass}>Grade</p><p className={valueClass}>{student.grade}</p></div>
             <div><p className={labelClass}>Age</p><p className={valueClass}>{student.age}</p></div>
+            <div><p className={labelClass}>Status</p><p className={valueClass}>{(student.status ?? 'active') === 'inactive' ? 'Inactive' : 'Active'}</p></div>
             <div><p className={labelClass}>Session Type</p><p className={valueClass}>{student.session_type}</p></div>
             <div><p className={labelClass}>Session Length</p><p className={valueClass}>{student.session_length_minutes} min</p></div>
             <div><p className={labelClass}>Tutor</p><p className={valueClass}>{student.tutor_name}</p></div>
@@ -193,6 +194,12 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
           <div>
             <label className={labelClass}>Age</label>
             <input className={inputClass} type="number" value={form.age} onChange={e => update('age', Number(e.target.value))} />
+          </div>
+          <div>
+            <label className={labelClass}>Status</label>
+            <select className={inputClass} value={form.status ?? 'active'} onChange={e => update('status', e.target.value)}>
+              <option value="active">Active</option><option value="inactive">Inactive</option>
+            </select>
           </div>
           <div>
             <label className={labelClass}>Session Type</label>

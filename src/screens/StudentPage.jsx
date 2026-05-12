@@ -260,6 +260,11 @@ function StudentHeader({ student, reportCards, onEmailParent, onPlanSession }) {
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--v4-purple-lt)] text-[var(--v4-purple)]">
             {student.session_type}
           </span>
+          {student.status === 'inactive' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]">
+              Inactive
+            </span>
+          )}
           {status && (
             <>
               <span className="text-[var(--v4-ink-3)]">·</span>

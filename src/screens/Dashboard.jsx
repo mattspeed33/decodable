@@ -30,12 +30,13 @@ export default function Dashboard() {
     return m
   }, [allReportCards])
 
-  const totalStudents = students.length
+  const activeStudents = students.filter(s => (s.status ?? 'active') !== 'inactive')
+  const totalStudents = activeStudents.length
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const sessionsThisWeek = allSessions.filter(s => new Date(s.date) >= sevenDaysAgo).length
 
-  const studentLevels = students.map(s => {
+  const studentLevels = activeStudents.map(s => {
     const latest = latestReportByStudent[s.id]
     if (!latest?.skillLevels) return { student: s, skills: null, statusCounts: null }
     const filled = Object.entries(latest.skillLevels).filter(([, v]) => v && v !== 'not-assessed')
@@ -196,7 +197,7 @@ export default function Dashboard() {
       {/* STUDENT LIST */}
       <Section title="Students" action="View all →" onAction={() => navigate('/students')}>
         <ListTable>
-          {students.map(s => {
+          {activeStudents.map(s => {
             const a = latestAnalysisByStudent[s.id]
             const fluency = a?.ai_analysis?.fluency_estimate_pct || 0
             const ufli = a?.ai_analysis?.ufli_placement?.current_working_unit
