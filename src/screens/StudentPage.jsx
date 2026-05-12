@@ -599,8 +599,28 @@ function RightPanel({ student, reportCards, onEdit }) {
     return GRADE_LEVELS.find(g => g.key === level)?.label || level
   }
 
+  const isInactive = student.status === 'inactive'
+  const statusLabel = isInactive ? 'Inactive' : 'Active'
+  const statusDotClass = isInactive ? 'bg-[var(--v4-ink-4)]' : 'bg-[var(--v4-green)]'
+
   return (
     <aside className="bg-[var(--v4-surface-2)] border-l border-[var(--v4-border)] h-screen overflow-y-auto sticky top-0 p-5 text-[var(--v4-ink)]">
+      <PanelSection title={<>👤 Student</>} action="Edit" onAction={() => onEdit('profile')}>
+        <PanelField
+          label="Status"
+          value={
+            <span className="flex items-center gap-1.5">
+              <span className={`inline-block w-[7px] h-[7px] rounded-full ${statusDotClass}`} />
+              {statusLabel}
+            </span>
+          }
+        />
+        <PanelField label="Type" value={student.session_type} />
+        <PanelField label="Grade" value={student.grade} />
+        <PanelField label="Age" value={student.age} />
+        <PanelField label="Tutor" value={student.tutor_name} placeholder="Add tutor..." />
+      </PanelSection>
+
       <PanelSection
         title={<><BarChart3 className="w-3.5 h-3.5" /> Skills</>}
         action={Object.keys(skillLevels).length > 0 ? 'View all →' : null}
