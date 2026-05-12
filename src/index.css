@@ -16,12 +16,40 @@
   --gold-light: #fff8e1;
   --bg: #f7f7f5;
   --card: #ffffff;
+
+  /* V4 design palette (used on the new student view) */
+  --v4-bg: #f5f3ef;
+  --v4-surface: #ffffff;
+  --v4-surface-2: #faf9f6;
+  --v4-surface-3: #f0eee9;
+  --v4-ink: #1a1a1a;
+  --v4-ink-2: #4a4a4a;
+  --v4-ink-3: #9a9a9a;
+  --v4-ink-4: #d4d4cf;
+  --v4-border: #e8e6e0;
+  --v4-border-2: #d4d4cf;
+  --v4-green: #16a34a;
+  --v4-green-lt: #dcfce7;
+  --v4-amber: #d97706;
+  --v4-amber-lt: #fef3c7;
+  --v4-red: #dc2626;
+  --v4-red-lt: #fee2e2;
+  --v4-blue: #2563eb;
+  --v4-blue-lt: #dbeafe;
+  --v4-purple: #7c3aed;
+  --v4-purple-lt: #ede9fe;
+  --v4-teal: #0d9488;
+  --v4-teal-lt: #ccfbf1;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   background: var(--bg);
+}
+
+.font-mono {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 @media print {

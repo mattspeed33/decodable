@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decodable — Student View V4</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #faf9f6;
+  --surface3: #f0eee9;
+  --ink: #1a1a1a;
+  --ink2: #4a4a4a;
+  --ink3: #9a9a9a;
+  --ink4: #d4d4cf;
+  --border: #e8e6e0;
+  --border2: #d4d4cf;
+
+  --green: #16a34a;
+  --green-lt: #dcfce7;
+
+  --amber: #d97706;
+  --amber-lt: #fef3c7;
+
+  --red: #dc2626;
+  --red-lt: #fee2e2;
+
+  --blue: #2563eb;
+  --blue-lt: #dbeafe;
+
+  --purple: #7c3aed;
+  --purple-lt: #ede9fe;
+
+  --teal: #0d9488;
+  --teal-lt: #ccfbf1;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+html, body {
+  font-family: 'Geist', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ─── APP SHELL ─────────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr 300px;
+  min-height: 100vh;
+}
+
+/* ─── SIDEBAR ───────────────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--surface2);
+  border-right: 1px solid var(--border);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 10px 16px;
+  margin-bottom: 8px;
+}
+.brand-logo {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, #86efac, #16a34a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.brand-name {
+  font-size: 14.5px; font-weight: 700;
+  letter-spacing: -.3px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-weight: 500;
+}
+.nav-item:hover { background: var(--surface3); color: var(--ink); }
+.nav-item.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.nav-icon { font-size: 13px; width: 18px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--blue);
+  color: white;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 18px 10px 6px;
+}
+
+.student-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--ink2);
+  font-weight: 500;
+}
+.student-nav-item:hover { background: var(--surface3); }
+.student-nav-item.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.snav-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.snav-name { flex: 1; }
+.snav-grade { font-size: 10.5px; color: var(--ink3); font-weight: 500; }
+
+/* ─── MAIN ──────────────────────────────────────────────────────────────── */
+.main {
+  background: var(--surface);
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* ─── TOP BAR ───────────────────────────────────────────────────────────── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 10;
+}
+.back-btn {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  color: var(--ink3);
+  cursor: pointer;
+  background: none; border: none; font-family: inherit; font-size: 14px;
+}
+.back-btn:hover { background: var(--surface3); color: var(--ink); }
+.tb-crumb {
+  font-size: 12.5px;
+  color: var(--ink3);
+  font-weight: 500;
+}
+
+.tb-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.ask-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 16px;
+  background: var(--surface3);
+  font-size: 12px; font-weight: 600;
+  color: var(--ink2);
+  cursor: pointer; border: none; font-family: inherit;
+}
+.ask-btn:hover { background: var(--ink4); }
+.avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  font-size: 10px; font-weight: 700; color: white;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ─── STUDENT HEADER ─────────────────────────────────────────────────────── */
+.student-header {
+  padding: 24px 28px 4px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sh-emoji {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: var(--green-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.sh-info { flex: 1; }
+.sh-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.5px;
+  line-height: 1.15;
+}
+.sh-meta {
+  font-size: 12.5px;
+  color: var(--ink3);
+  margin-top: 2px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--purple-lt);
+  color: var(--purple);
+}
+
+.sh-actions { display: flex; gap: 6px; align-items: center; }
+.sh-btn-primary {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 7px;
+  background: var(--ink);
+  color: white;
+  font-size: 12.5px; font-weight: 600;
+  border: none; font-family: inherit;
+  cursor: pointer;
+}
+.sh-btn-primary:hover { background: #000; }
+.sh-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12.5px; font-weight: 500;
+  color: var(--ink2);
+  cursor: pointer; font-family: inherit;
+}
+.sh-btn:hover { background: var(--surface3); }
+
+/* ─── TABS ───────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 12px 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none; border-left: none; border-right: none; border-top: none;
+  font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.tab:hover { color: var(--ink2); }
+.tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+.tab-count {
+  font-size: 10.5px;
+  background: var(--surface3);
+  color: var(--ink3);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.tab.active .tab-count { background: var(--ink); color: white; }
+
+/* ─── BODY ──────────────────────────────────────────────────────────────── */
+.body {
+  padding: 22px 28px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── THIS WEEK CARD (hero) ─────────────────────────────────────────────── */
+.this-week {
+  background: linear-gradient(135deg, #f0f9ff 0%, #faf9f6 100%);
+  border: 1px solid var(--blue-lt);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.this-week:hover {
+  border-color: var(--blue);
+}
+.tw-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--blue-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.tw-content { flex: 1; }
+.tw-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.tw-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.2px;
+  margin-bottom: 2px;
+}
+.tw-sub {
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.tw-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.tw-prog-text {
+  font-size: 11px;
+  color: var(--ink3);
+  font-weight: 600;
+}
+.tw-prog-bar {
+  display: flex; gap: 3px;
+}
+.tw-seg {
+  width: 18px; height: 5px; border-radius: 2px;
+  background: var(--surface3);
+}
+.tw-seg.done { background: var(--blue); }
+.tw-seg.active { background: var(--blue); }
+
+/* ─── HIGHLIGHTS GRID — 4 cards ─────────────────────────────────────────── */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 10px;
+}
+.section-head .see-all {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--ink2);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+.section-head .see-all:hover { color: var(--ink); }
+.section-head .add-btn {
+  margin-left: auto;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  color: var(--ink3);
+  background: none; border: none; font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.section-head .add-btn:hover { background: var(--surface3); color: var(--ink); }
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.hl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: all .12s;
+}
+.hl-card:hover {
+  border-color: var(--border2);
+}
+.hl-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.hl-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.2px;
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hl-sub {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 1px;
+}
+.status-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-red   { background: var(--red);   }
+
+/* ─── SECTION CARDS (lists) ─────────────────────────────────────────────── */
+.list-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.list-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: var(--surface2); }
+
+.lr-icon {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.lr-icon.purple { background: var(--purple-lt); color: var(--purple); }
+.lr-icon.blue { background: var(--blue-lt); color: var(--blue); }
+.lr-icon.green { background: var(--green-lt); color: var(--green); }
+.lr-icon.amber { background: var(--amber-lt); color: var(--amber); }
+.lr-icon.teal { background: var(--teal-lt); color: var(--teal); }
+
+.lr-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.lr-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  display: flex; align-items: center; gap: 6px;
+}
+.lr-sub {
+  font-size: 11.5px;
+  color: var(--ink3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lr-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.lr-tag.purple { background: var(--purple-lt); color: var(--purple); }
+.lr-tag.blue { background: var(--blue-lt); color: var(--blue); }
+.lr-tag.green { background: var(--green-lt); color: var(--green); }
+.lr-tag.gray { background: var(--surface3); color: var(--ink2); }
+.lr-date {
+  font-size: 11.5px;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+
+/* ─── RIGHT PANEL ─────────────────────────────────────────────────────────── */
+.right-panel {
+  background: var(--surface2);
+  border-left: 1px solid var(--border);
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  padding: 20px;
+}
+
+.rp-section {
+  margin-bottom: 22px;
+}
+.rp-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+.rp-section-head .rp-action {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--ink2);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.rp-section-head .rp-action:hover { color: var(--ink); }
+
+.rp-field {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.rp-field-label {
+  color: var(--ink3);
+  font-weight: 500;
+}
+.rp-field-value {
+  color: var(--ink);
+  font-weight: 500;
+  display: flex; align-items: center; gap: 5px;
+}
+.rp-field-value.empty {
+  color: var(--ink3);
+  font-weight: 400;
+}
+
+.rp-skill-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.rp-skill-name {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--ink2);
+  font-weight: 500;
+}
+.rp-skill-level {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.mono { font-family: 'Geist Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">🌱</div>
+      <div class="brand-name">Decodable</div>
+    </div>
+
+    <div class="nav-item"><span class="nav-icon">🏠</span> Home</div>
+    <div class="nav-item active"><span class="nav-icon">👶</span> Students</div>
+    <div class="nav-item"><span class="nav-icon">📅</span> This Week <span class="nav-badge">3</span></div>
+    <div class="nav-item"><span class="nav-icon">📊</span> Reports</div>
+
+    <div class="section-label">Students</div>
+    <div class="student-nav-item active">
+      <div class="snav-dot" style="background:#7c3aed"></div>
+      <span class="snav-name">Hayes</span>
+      <span class="snav-grade">1st</span>
+    </div>
+    <div class="student-nav-item">
+      <div class="snav-dot" style="background:#2563eb"></div>
+      <span class="snav-name">Teddy</span>
+      <span class="snav-grade">1st</span>
+    </div>
+    <div class="student-nav-item">
+      <div class="snav-dot" style="background:#16a34a"></div>
+      <span class="snav-name">Maya</span>
+      <span class="snav-grade">2nd</span>
+    </div>
+    <div class="student-nav-item">
+      <div class="snav-dot" style="background:#dc2626"></div>
+      <span class="snav-name">Jake</span>
+      <span class="snav-grade">1st</span>
+    </div>
+    <div class="student-nav-item">
+      <div class="snav-dot" style="background:#ea580c"></div>
+      <span class="snav-name">Sophia</span>
+      <span class="snav-grade">K</span>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ─────────────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <button class="back-btn">‹</button>
+      <span class="tb-crumb">Students</span>
+      <div class="tb-right">
+        <button class="ask-btn">✨ Ask Decodable</button>
+        <div class="avatar">LW</div>
+      </div>
+    </div>
+
+    <!-- STUDENT HEADER -->
+    <div class="student-header">
+      <div class="sh-emoji">🌱</div>
+      <div class="sh-info">
+        <div class="sh-name">Hayes</div>
+        <div class="sh-meta">
+          1st grade · Age 7
+          <span class="sh-chip">1:1</span>
+          <span style="color:var(--ink3)">·</span>
+          <span style="color:var(--amber);font-weight:600">● On track</span>
+        </div>
+      </div>
+      <div class="sh-actions">
+        <button class="sh-btn">✉️ Email Parent</button>
+        <button class="sh-btn-primary">📋 Plan Next Session</button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active">Overview</button>
+      <button class="tab">Assessments <span class="tab-count">3</span></button>
+      <button class="tab">AI Analysis <span class="tab-count">2</span></button>
+      <button class="tab">Sessions <span class="tab-count">1</span></button>
+      <button class="tab">Emails <span class="tab-count">3</span></button>
+      <button class="tab">Report Cards <span class="tab-count">1</span></button>
+    </div>
+
+    <!-- BODY -->
+    <div class="body">
+
+      <!-- THIS WEEK -->
+      <div class="this-week">
+        <div class="tw-icon">🎯</div>
+        <div class="tw-content">
+          <div class="tw-label">This Week's Focus</div>
+          <div class="tw-title">Digraph automaticity (sh, ch, th, wh, ck)</div>
+          <div class="tw-sub">Session 2 tomorrow · Sound drill, word chains, decodable sentences</div>
+        </div>
+        <div class="tw-progress">
+          <div class="tw-prog-bar">
+            <div class="tw-seg active"></div>
+            <div class="tw-seg"></div>
+            <div class="tw-seg"></div>
+            <div class="tw-seg"></div>
+          </div>
+          <span class="tw-prog-text">Week 1 of 4</span>
+        </div>
+      </div>
+
+      <!-- HIGHLIGHTS - 4 cards -->
+      <div>
+        <div class="section-head">Highlights</div>
+        <div class="highlights">
+
+          <div class="hl-card">
+            <div class="hl-label">📖 Reading Level</div>
+            <div class="hl-value">
+              <span class="status-dot dot-amber"></span>
+              Late 1st
+            </div>
+            <div class="hl-sub">On track for 1st grade</div>
+          </div>
+
+          <div class="hl-card">
+            <div class="hl-label">🧠 Latest AI Analysis</div>
+            <div class="hl-value" style="font-size:13px">UFLI Unit 5 placement</div>
+            <div class="hl-sub">3 priority gaps · 3 days ago</div>
+          </div>
+
+          <div class="hl-card">
+            <div class="hl-label">✉️ Last Parent Email</div>
+            <div class="hl-value" style="font-size:13px">Session 1 Update</div>
+            <div class="hl-sub">3 days ago</div>
+          </div>
+
+          <div class="hl-card">
+            <div class="hl-label">📄 Latest Report Card</div>
+            <div class="hl-value" style="font-size:13px">Initial Snapshot</div>
+            <div class="hl-sub">May 1 · Next due end of engagement</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ASSESSMENTS -->
+      <div>
+        <div class="section-head">
+          Recent Assessments
+          <span class="see-all">View all →</span>
+        </div>
+        <div class="list-table">
+          <div class="list-row">
+            <div class="lr-icon blue">📋</div>
+            <div class="lr-main">
+              <div class="lr-title">
+                Phonics & Decoding
+                <span class="lr-tag purple">Unit 5</span>
+              </div>
+              <div class="lr-sub">Student progressed through CVC → digraphs → blends</div>
+            </div>
+            <div></div>
+            <div class="lr-date">3 days ago</div>
+          </div>
+          <div class="list-row">
+            <div class="lr-icon teal">📋</div>
+            <div class="lr-main">
+              <div class="lr-title">
+                Phonological Awareness
+                <span class="lr-tag green">Solid</span>
+              </div>
+              <div class="lr-sub">Rhyming and blending mastered, segmenting emerging</div>
+            </div>
+            <div></div>
+            <div class="lr-date">5 days ago</div>
+          </div>
+          <div class="list-row">
+            <div class="lr-icon amber">📸</div>
+            <div class="lr-main">
+              <div class="lr-title">
+                Intake Snapshot
+                <span class="lr-tag gray">Initial</span>
+              </div>
+              <div class="lr-sub">Quick triage across all 11 skill areas</div>
+            </div>
+            <div></div>
+            <div class="lr-date">10 days ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div>
+        <div class="section-head">
+          Recent Activity
+          <span class="see-all">View all →</span>
+        </div>
+        <div class="list-table">
+          <div class="list-row">
+            <div class="lr-icon purple">🧠</div>
+            <div class="lr-main">
+              <div class="lr-title">Analysis run — Phonics & Decoding</div>
+              <div class="lr-sub">UFLI Unit 5 · 3 priority gaps identified</div>
+            </div>
+            <div></div>
+            <div class="lr-date">3 days ago</div>
+          </div>
+          <div class="list-row">
+            <div class="lr-icon amber">✉️</div>
+            <div class="lr-main">
+              <div class="lr-title">Parent email sent — Session 1 update</div>
+              <div class="lr-sub">Sent to lauren.hayes@email.com</div>
+            </div>
+            <div></div>
+            <div class="lr-date">3 days ago</div>
+          </div>
+          <div class="list-row">
+            <div class="lr-icon green">📝</div>
+            <div class="lr-main">
+              <div class="lr-title">Session 1 logged</div>
+              <div class="lr-sub">Introduction · digraphs · 50 min</div>
+            </div>
+            <div></div>
+            <div class="lr-date">3 days ago</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── RIGHT PANEL ──────────────────────────────────────────────────────── -->
+  <aside class="right-panel">
+
+    <!-- SKILLS SNAPSHOT -->
+    <div class="rp-section">
+      <div class="rp-section-head">
+        📊 Skills
+        <span class="rp-action">View all →</span>
+      </div>
+      <div class="rp-skill-row">
+        <div class="rp-skill-name">
+          <span class="status-dot dot-green"></span>
+          Sight Words
+        </div>
+        <div class="rp-skill-level">Early 2nd</div>
+      </div>
+      <div class="rp-skill-row">
+        <div class="rp-skill-name">
+          <span class="status-dot dot-amber"></span>
+          Phonics & Decoding
+        </div>
+        <div class="rp-skill-level">Late 1st</div>
+      </div>
+      <div class="rp-skill-row">
+        <div class="rp-skill-name">
+          <span class="status-dot dot-amber"></span>
+          Phonological Awareness
+        </div>
+        <div class="rp-skill-level">Early 1st</div>
+      </div>
+      <div class="rp-skill-row">
+        <div class="rp-skill-name">
+          <span class="status-dot dot-red"></span>
+          Alphabet Knowledge
+        </div>
+        <div class="rp-skill-level">Kinder</div>
+      </div>
+      <div class="rp-skill-row">
+        <div class="rp-skill-name">
+          <span class="status-dot dot-red"></span>
+          Phonics Automaticity
+        </div>
+        <div class="rp-skill-level">Early 1st</div>
+      </div>
+    </div>
+
+    <!-- PARENT -->
+    <div class="rp-section">
+      <div class="rp-section-head">
+        👨‍👩‍👧 Parent
+        <span class="rp-action">Edit</span>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">Name</div>
+        <div class="rp-field-value">Lauren Hayes</div>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">Email</div>
+        <div class="rp-field-value" style="font-size:11.5px">lauren.hayes@email.com</div>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">Phone</div>
+        <div class="rp-field-value empty">Add phone...</div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="rp-section">
+      <div class="rp-section-head">📅 Schedule</div>
+      <div class="rp-field">
+        <div class="rp-field-label">When</div>
+        <div class="rp-field-value">Tuesdays · 4:00 PM</div>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">Length</div>
+        <div class="rp-field-value">50 min</div>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">Start</div>
+        <div class="rp-field-value mono">May 1, 2026</div>
+      </div>
+      <div class="rp-field">
+        <div class="rp-field-label">End</div>
+        <div class="rp-field-value mono">May 29, 2026</div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+</body>
+</html>

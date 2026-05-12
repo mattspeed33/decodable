@@ -20,9 +20,6 @@ import AssessmentTemplateDetail from './screens/AssessmentTemplateDetail.jsx'
 import HomeworkInbox from './screens/HomeworkInbox.jsx'
 import CalendarPage from './screens/CalendarPage.jsx'
 
-// Runs the one-shot localStorage → server migration after sign-in, before the
-// rest of the app renders. The server is the source of truth from here on, so
-// we must finish (or fail-and-continue) before any screen tries to read.
 function MigrationGate({ children }) {
   const [ready, setReady] = useState(false)
   const [imported, setImported] = useState(null)
@@ -69,6 +66,31 @@ function ImportBanner({ counts, onDismiss }) {
   )
 }
 
+// Default layout: global NavBar on the left, constrained main area. Used for
+// every route except the V4 student view, which takes over the full viewport.
+function DefaultLayout() {
+  return (
+    <div className="min-h-screen bg-[var(--bg)]">
+      <NavBar />
+      <main className="ml-56 max-w-4xl px-10 py-8">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/students" element={<Students />} />
+          <Route path="/students/new" element={<NewStudent />} />
+          <Route path="/students/:id/analysis" element={<AnalysisResult />} />
+          <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
+          <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/templates" element={<AssessmentTemplates />} />
+          <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
+          <Route path="/homework" element={<HomeworkInbox />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <>
@@ -80,25 +102,10 @@ export default function App() {
       <SignedIn>
         <MigrationGate>
           <BrowserRouter>
-            <div className="min-h-screen bg-[var(--bg)]">
-              <NavBar />
-              <main className="ml-56 max-w-4xl px-10 py-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/students" element={<Students />} />
-                  <Route path="/students/new" element={<NewStudent />} />
-                  <Route path="/students/:id" element={<StudentPage />} />
-                  <Route path="/students/:id/analysis" element={<AnalysisResult />} />
-                  <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
-                  <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/templates" element={<AssessmentTemplates />} />
-                  <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
-                  <Route path="/homework" element={<HomeworkInbox />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </main>
-            </div>
+            <Routes>
+              <Route path="/students/:id" element={<StudentPage />} />
+              <Route path="/*" element={<DefaultLayout />} />
+            </Routes>
           </BrowserRouter>
         </MigrationGate>
       </SignedIn>

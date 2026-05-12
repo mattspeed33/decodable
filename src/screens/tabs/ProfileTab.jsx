@@ -24,10 +24,10 @@ Each week: focus is a short phrase, activity_type lists 2-3 activities.
 Respond in valid JSON only. Return an array of week objects:
 [{ "week": 1, "focus": "", "ufli_unit": 0, "activity_type": "" }]`
 
-export default function ProfileTab({ studentId, onRefresh }) {
+export default function ProfileTab({ studentId, onRefresh, defaultEditing = false }) {
   const { data: student, loading, refresh } = useAsync(() => getStudent(studentId), [studentId])
   const { data: latestAssessment } = useAsync(() => getLatestAssessment(studentId), [studentId])
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(defaultEditing)
   const [form, setForm] = useState(null)
   const [saved, setSaved] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
