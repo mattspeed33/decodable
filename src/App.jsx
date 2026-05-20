@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { SignedIn, SignedOut, SignIn } from '@clerk/clerk-react'
 import { runMigration } from './lib/migration'
 import { maybeMigrateOnce } from './lib/firstRunMigration'
@@ -73,19 +73,7 @@ function DefaultLayout() {
     <div className="min-h-screen bg-[var(--v4-bg)]">
       <NavBar />
       <main className="ml-[220px] max-w-6xl px-8 py-7">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/students/new" element={<NewStudent />} />
-          <Route path="/students/:id/analysis" element={<AnalysisResult />} />
-          <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
-          <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/templates" element={<AssessmentTemplates />} />
-          <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
-          <Route path="/homework" element={<HomeworkInbox />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
+        <Outlet />
       </main>
     </div>
   )
@@ -104,7 +92,19 @@ export default function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/students/:id" element={<StudentPage />} />
-              <Route path="/*" element={<DefaultLayout />} />
+              <Route element={<DefaultLayout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/students" element={<Students />} />
+                <Route path="/students/new" element={<NewStudent />} />
+                <Route path="/students/:id/analysis" element={<AnalysisResult />} />
+                <Route path="/students/:id/homework/new" element={<HomeworkSheet />} />
+                <Route path="/students/:id/homework/:sheetId" element={<HomeworkSheetView />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/templates" element={<AssessmentTemplates />} />
+                <Route path="/skills/:categoryId" element={<AssessmentTemplateDetail />} />
+                <Route path="/homework" element={<HomeworkInbox />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </MigrationGate>
