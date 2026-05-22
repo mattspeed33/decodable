@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Sparkles, ClipboardList, Pencil, Trash2, X, Brain } from 'lucide-react'
+import { Sparkles, ClipboardList, Pencil, Trash2, X, Brain, Upload, Save } from 'lucide-react'
 import {
   getStudent, getAssessments, getSessions, getAnalyses,
   saveAssessment, deleteAssessment,
@@ -14,9 +14,13 @@ import CategoryPicker from '../../components/CategoryPicker.jsx'
 import AssessmentForm from '../../components/AssessmentForm.jsx'
 import AssessmentSelector from '../../components/AssessmentSelector.jsx'
 import LoadingState from '../../components/LoadingState.jsx'
-import { BtnPrimary, BtnSecondary } from '../../components/v4/primitives.jsx'
+import PhotoUploader from '../../components/PhotoUploader.jsx'
+import { BtnPrimary, BtnSecondary, Card } from '../../components/v4/primitives.jsx'
+
+const STUDENT_WORK_CATEGORY = 'student-work'
 
 const ICONS = {
+  [STUDENT_WORK_CATEGORY]: '📎',
   'intake-snapshot': '📸', 'phonological-awareness': '👂', 'alphabet-knowledge': '🔤',
   'phonics-decoding': '📖', 'phonics-automaticity': '⚡', 'sight-word-fluency': '👀',
   'oral-reading-fluency': '🗣️', 'spelling-encoding': '✏️', 'vocabulary': '💬',
@@ -24,6 +28,7 @@ const ICONS = {
 }
 
 function categoryLabel(id) {
+  if (id === STUDENT_WORK_CATEGORY) return 'Student Work'
   return SKILLS_CATEGORIES.find(c => c.id === id)?.label || id
 }
 
@@ -103,6 +108,32 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
     onRefresh?.()
   }
 
+  async function handleSaveUpload({ photos, notes }) {
+    const compressedPhotos = []
+    for (const photo of photos) {
+      if (photo.file) compressedPhotos.push(await compressImage(photo.file))
+      else if (typeof photo === 'string') compressedPhotos.push(photo)
+    }
+    const work = {
+      id: crypto.randomUUID(),
+      student_id: studentId,
+      date: new Date().toISOString().split('T')[0],
+      category_id: STUDENT_WORK_CATEGORY,
+      entry_method: 'photo',
+      form_data: {},
+      photos: compressedPhotos,
+      notes: notes || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await saveAssessment(work)
+    setView('list')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+    refreshAssessments()
+    onRefresh?.()
+  }
+
   async function handleRunAnalysis() {
     const selected = assessments.filter(a => selectedForAnalysis.includes(a.id))
     if (selected.length === 0) return
@@ -151,6 +182,14 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
   }
 
   if (loading) return <LoadingState />
+  if (view === 'upload') {
+    return (
+      <UploadStudentWorkForm
+        onSave={handleSaveUpload}
+        onCancel={() => setView('list')}
+      />
+    )
+  }
   if (view === 'pick-category') return <CategoryPicker onSelect={handleCategorySelected} onCancel={() => setView('list')} />
   if (view === 'form' && selectedCategory) {
     return (
@@ -180,16 +219,19 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
   return (
     <div className="space-y-4">
       {/* HEADER */}
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
         <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Student Work</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {hasAssessments && (
             <BtnSecondary onClick={() => { setSelectedForAnalysis(assessments.map(a => a.id)); setView('select-for-analysis') }}>
               <Sparkles className="w-3.5 h-3.5" /> Run Analysis
             </BtnSecondary>
           )}
-          <BtnPrimary onClick={() => setView('pick-category')}>
-            <Plus className="w-3.5 h-3.5" /> New Work
+          <BtnSecondary onClick={() => setView('pick-category')}>
+            <ClipboardList className="w-3.5 h-3.5" /> New Assessment
+          </BtnSecondary>
+          <BtnPrimary onClick={() => setView('upload')}>
+            <Upload className="w-3.5 h-3.5" /> Upload Student Work
           </BtnPrimary>
         </div>
       </div>
@@ -197,14 +239,23 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
       {error && <Banner tone="red">{error}</Banner>}
       {saved && <Banner tone="green">Student work saved.</Banner>}
 
-      {/* Intake CTA for new students */}
+      {/* CTAs for new students */}
       {!hasAssessments && (
-        <div className="border border-[var(--v4-ink)] rounded-[10px] bg-[var(--v4-surface)] p-4 space-y-2">
-          <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Start the intake assessment</p>
-          <p className="text-[12.5px] text-[var(--v4-ink-2)]">Create your first assessment to establish a baseline. Fill it out digitally or print the paper form.</p>
-          <BtnPrimary onClick={() => handleCategorySelected('intake-snapshot')} className="mt-1">
-            <ClipboardList className="w-3.5 h-3.5" /> Start Intake
-          </BtnPrimary>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="border border-[var(--v4-ink)] rounded-[10px] bg-[var(--v4-surface)] p-4 space-y-2">
+            <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Upload student work</p>
+            <p className="text-[12.5px] text-[var(--v4-ink-2)]">Snap a photo of any reading or writing the student has done. Decodable will analyze it.</p>
+            <BtnPrimary onClick={() => setView('upload')} className="mt-1">
+              <Upload className="w-3.5 h-3.5" /> Upload Work
+            </BtnPrimary>
+          </div>
+          <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] p-4 space-y-2">
+            <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Start the intake assessment</p>
+            <p className="text-[12.5px] text-[var(--v4-ink-2)]">Establish a baseline with a structured assessment. Fill out digitally or print the paper form.</p>
+            <BtnSecondary onClick={() => handleCategorySelected('intake-snapshot')} className="mt-1">
+              <ClipboardList className="w-3.5 h-3.5" /> Start Intake
+            </BtnSecondary>
+          </div>
         </div>
       )}
 
@@ -275,6 +326,65 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
           onJumpToAnalyses={onJumpToAnalyses}
         />
       )}
+    </div>
+  )
+}
+
+function UploadStudentWorkForm({ onSave, onCancel }) {
+  const [photos, setPhotos] = useState([])
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (photos.length === 0 || saving) return
+    setSaving(true)
+    try {
+      await onSave({ photos, notes })
+    } catch {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Upload Student Work</h3>
+          <p className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5">
+            Snap photos of anything the student has written or read. Decodable will analyze it once you run analysis.
+          </p>
+        </div>
+        <button
+          onClick={onCancel}
+          className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] shrink-0"
+          title="Cancel"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <Card padding="p-4" className="space-y-2">
+        <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Photos</p>
+        <PhotoUploader photos={photos} setPhotos={setPhotos} />
+      </Card>
+
+      <Card padding="p-4" className="space-y-2">
+        <label className="block text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Notes (optional)</label>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="What was the assignment? Anything to flag for analysis?"
+          className="w-full border border-[var(--v4-border)] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)] h-24 resize-none"
+        />
+      </Card>
+
+      <BtnPrimary
+        onClick={handleSave}
+        disabled={photos.length === 0 || saving}
+        className={`w-full justify-center py-2.5 ${photos.length === 0 || saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <Save className="w-3.5 h-3.5" /> {saving ? 'Saving…' : 'Save Work'}
+      </BtnPrimary>
     </div>
   )
 }
