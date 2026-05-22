@@ -113,7 +113,11 @@ export default function StudentPage() {
             />
           )}
           {activeTab === 'assessments' && (
-            <AssessmentsTab studentId={id} onRefresh={refreshStudent} />
+            <AssessmentsTab
+              studentId={id}
+              onRefresh={refreshStudent}
+              onJumpToAnalyses={() => setActiveTab('analyses')}
+            />
           )}
           {activeTab === 'analyses' && (
             <AnalysisTab studentId={id} />
@@ -286,7 +290,7 @@ function StudentHeader({ student, reportCards, onEmailParent, onPlanSession }) {
 function TabBar({ activeTab, setActiveTab, counts }) {
   const tabs = [
     { key: 'overview', label: 'Overview' },
-    { key: 'assessments', label: 'Assessments', count: counts.assessments },
+    { key: 'assessments', label: 'Student Work', count: counts.assessments },
     { key: 'analyses', label: 'AI Analysis', count: counts.analyses },
     { key: 'sessions', label: 'Sessions', count: counts.sessions },
     { key: 'emails', label: 'Emails', count: counts.emails },
@@ -425,10 +429,10 @@ function OverviewTab({ student, latestAnalysis, analyses, assessments, sessions,
         reportCards={reportCards}
       />
 
-      {/* RECENT ASSESSMENTS */}
-      <Section title="Recent Assessments" action="View all →" onAction={() => setActiveTab('assessments')}>
+      {/* RECENT STUDENT WORK */}
+      <Section title="Recent Student Work" action="View all →" onAction={() => setActiveTab('assessments')}>
         {assessments.length === 0 ? (
-          <EmptyRow icon={<ClipboardList className="w-4 h-4" />} text="No assessments yet." />
+          <EmptyRow icon={<ClipboardList className="w-4 h-4" />} text="No student work yet." />
         ) : (
           <ListTable>
             {assessments.slice(0, 3).map(a => (

@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Sparkles, ClipboardList, Pencil, Trash2 } from 'lucide-react'
-import { getStudent, getAssessments, getSessions, saveAssessment, deleteAssessment } from '../../lib/storage'
+import { Plus, Sparkles, ClipboardList, Pencil, Trash2, X, Brain } from 'lucide-react'
+import {
+  getStudent, getAssessments, getSessions, getAnalyses,
+  saveAssessment, deleteAssessment,
+} from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
@@ -22,6 +25,11 @@ const ICONS = {
 
 function categoryLabel(id) {
   return SKILLS_CATEGORIES.find(c => c.id === id)?.label || id
+}
+
+function photoSrc(photo) {
+  if (typeof photo !== 'string') return null
+  return photo.startsWith('data:') ? photo : `data:image/jpeg;base64,${photo}`
 }
 
 function assessmentSummary(a) {
@@ -45,11 +53,12 @@ function relativeDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
 }
 
-export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }) {
+export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses, autoStartIntake }) {
   const navigate = useNavigate()
   const { data: student } = useAsync(() => getStudent(studentId), [studentId])
   const { data: sessions = [] } = useAsync(() => getSessions(studentId), [studentId])
   const { data: assessments = [], refresh: refreshAssessments } = useAsync(() => getAssessments(studentId), [studentId])
+  const { data: analyses = [] } = useAsync(() => getAnalyses(studentId), [studentId])
 
   const startWithIntake = autoStartIntake && assessments.length === 0
   const [view, setView] = useState(startWithIntake ? 'form' : 'list')
@@ -59,6 +68,7 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [viewing, setViewing] = useState(null)
 
   function handleCategorySelected(categoryId) {
     setSelectedCategory(categoryId)
@@ -171,7 +181,7 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
     <div className="space-y-4">
       {/* HEADER */}
       <div className="flex items-baseline justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Assessments</h3>
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Student Work</h3>
         <div className="flex items-center gap-2">
           {hasAssessments && (
             <BtnSecondary onClick={() => { setSelectedForAnalysis(assessments.map(a => a.id)); setView('select-for-analysis') }}>
@@ -179,13 +189,13 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
             </BtnSecondary>
           )}
           <BtnPrimary onClick={() => setView('pick-category')}>
-            <Plus className="w-3.5 h-3.5" /> New Assessment
+            <Plus className="w-3.5 h-3.5" /> New Work
           </BtnPrimary>
         </div>
       </div>
 
       {error && <Banner tone="red">{error}</Banner>}
-      {saved && <Banner tone="green">Assessment saved.</Banner>}
+      {saved && <Banner tone="green">Student work saved.</Banner>}
 
       {/* Intake CTA for new students */}
       {!hasAssessments && (
@@ -201,50 +211,225 @@ export default function AssessmentsTab({ studentId, onRefresh, autoStartIntake }
       {/* LIST */}
       {hasAssessments && (
         <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] overflow-hidden">
-          {assessments.map((a, i) => (
-            <div
-              key={a.id}
-              className={`grid items-center gap-3 px-4 py-3 hover:bg-[var(--v4-surface-2)] ${i === assessments.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
-              style={{ gridTemplateColumns: '32px 1fr auto auto' }}
-            >
-              <div className="w-8 h-8 rounded-md bg-[var(--v4-blue-lt)] flex items-center justify-center shrink-0 text-base">
-                {ICONS[a.category_id] || '📋'}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13.5px] font-semibold text-[var(--v4-ink)] flex items-center gap-1.5">
-                  <span className="truncate">{categoryLabel(a.category_id)}</span>
-                  <span className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]">
-                    {a.entry_method === 'digital' ? 'Digital' : 'Paper'}
-                  </span>
+          {assessments.map((a, i) => {
+            const firstPhoto = a.photos?.find(p => typeof p === 'string')
+            const thumbSrc = firstPhoto ? photoSrc(firstPhoto) : null
+            return (
+              <div
+                key={a.id}
+                onClick={() => setViewing(a)}
+                className={`grid items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--v4-surface-2)] ${i === assessments.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
+                style={{ gridTemplateColumns: '40px 1fr auto auto' }}
+              >
+                {thumbSrc ? (
+                  <img
+                    src={thumbSrc}
+                    alt=""
+                    className="w-10 h-10 rounded-md object-cover border border-[var(--v4-border)] shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-md bg-[var(--v4-blue-lt)] flex items-center justify-center shrink-0 text-base">
+                    {ICONS[a.category_id] || '📋'}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="text-[13.5px] font-semibold text-[var(--v4-ink)] flex items-center gap-1.5">
+                    <span className="truncate">{categoryLabel(a.category_id)}</span>
+                    <span className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]">
+                      {a.entry_method === 'digital' ? 'Digital' : 'Paper'}
+                    </span>
+                  </div>
+                  <div className="text-[11.5px] text-[var(--v4-ink-3)] truncate mt-0.5">
+                    {assessmentSummary(a)}
+                  </div>
                 </div>
-                <div className="text-[11.5px] text-[var(--v4-ink-3)] truncate mt-0.5">
-                  {assessmentSummary(a)}
+                <span className="text-[11.5px] text-[var(--v4-ink-3)] whitespace-nowrap">
+                  {relativeDate(a.date || a.created_at)}
+                </span>
+                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <IconBtn
+                    onClick={() => { setEditingAssessment(a); setSelectedCategory(a.category_id); setView('form') }}
+                    title="Edit"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </IconBtn>
+                  <IconBtn
+                    onClick={async () => { if (confirm('Delete this work?')) { await deleteAssessment(a.id); refreshAssessments(); onRefresh?.() } }}
+                    title="Delete"
+                    danger
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </IconBtn>
                 </div>
               </div>
-              <span className="text-[11.5px] text-[var(--v4-ink-3)] whitespace-nowrap">
-                {relativeDate(a.date || a.created_at)}
-              </span>
-              <div className="flex items-center gap-1 shrink-0">
-                <IconBtn
-                  onClick={() => { setEditingAssessment(a); setSelectedCategory(a.category_id); setView('form') }}
-                  title="Edit"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </IconBtn>
-                <IconBtn
-                  onClick={async () => { if (confirm('Delete this assessment?')) { await deleteAssessment(a.id); refreshAssessments(); onRefresh?.() } }}
-                  title="Delete"
-                  danger
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </IconBtn>
+            )
+          })}
+        </div>
+      )}
+
+      {viewing && (
+        <WorkLightbox
+          work={viewing}
+          analyses={analyses}
+          onClose={() => setViewing(null)}
+          onJumpToAnalyses={onJumpToAnalyses}
+        />
+      )}
+    </div>
+  )
+}
+
+function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
+  const [zoomed, setZoomed] = useState(null) // index of full-size photo
+  const photos = (work.photos || []).filter(p => typeof p === 'string')
+  const linkedAnalysis = analyses.find(an => Array.isArray(an.assessment_ids) && an.assessment_ids.includes(work.id))
+  const formEntries = Object.entries(work.form_data || {}).filter(([, v]) => {
+    if (v == null || v === '') return false
+    if (Array.isArray(v) && v.length === 0) return false
+    if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) return false
+    return true
+  })
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key !== 'Escape') return
+      if (zoomed != null) setZoomed(null)
+      else onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [zoomed, onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+      onClick={() => (zoomed != null ? setZoomed(null) : onClose())}
+    >
+      {zoomed != null ? (
+        <img
+          src={photoSrc(photos[zoomed])}
+          alt=""
+          className="max-w-full max-h-full object-contain rounded-md shadow-xl"
+          onClick={(e) => { e.stopPropagation(); setZoomed(null) }}
+        />
+      ) : (
+        <div
+          className="bg-[var(--v4-surface)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--v4-border)]">
+            <div className="w-9 h-9 rounded-md bg-[var(--v4-blue-lt)] flex items-center justify-center text-base shrink-0">
+              {ICONS[work.category_id] || '📋'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[15px] font-bold text-[var(--v4-ink)] truncate">{categoryLabel(work.category_id)}</div>
+              <div className="text-[11.5px] text-[var(--v4-ink-3)] mt-0.5 flex items-center gap-2">
+                <span>{relativeDate(work.date || work.created_at)}</span>
+                <span className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]">
+                  {work.entry_method === 'digital' ? 'Digital' : 'Paper'}
+                </span>
               </div>
             </div>
-          ))}
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="p-5 space-y-5">
+            {photos.length > 0 && (
+              <section>
+                <h4 className="text-[11px] font-bold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2">
+                  Uploaded photos
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {photos.map((p, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setZoomed(i)}
+                      className="block w-full aspect-[4/3] overflow-hidden rounded-md border border-[var(--v4-border)] hover:border-[var(--v4-ink)] transition-colors"
+                      title="Click to expand"
+                    >
+                      <img src={photoSrc(p)} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {formEntries.length > 0 && (
+              <section>
+                <h4 className="text-[11px] font-bold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2">
+                  Form entries
+                </h4>
+                <div className="border border-[var(--v4-border)] rounded-[10px] overflow-hidden">
+                  {formEntries.map(([k, v], i) => (
+                    <div
+                      key={k}
+                      className={`grid gap-3 px-3 py-2 text-[12.5px] ${i === formEntries.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
+                      style={{ gridTemplateColumns: '180px 1fr' }}
+                    >
+                      <div className="text-[var(--v4-ink-3)] font-medium">{k}</div>
+                      <div className="text-[var(--v4-ink)] font-mono break-words">{formatValue(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section>
+              <h4 className="text-[11px] font-bold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2">
+                AI Analysis
+              </h4>
+              {linkedAnalysis ? (
+                <div className="border border-[var(--v4-purple-lt)] rounded-[10px] bg-[var(--v4-purple-lt)] p-4 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <Brain className="w-4 h-4 text-[var(--v4-purple)] mt-0.5 shrink-0" />
+                    <div className="flex-1 text-[12.5px] text-[var(--v4-ink)] space-y-1">
+                      {linkedAnalysis.ai_analysis?.passage_level_reached && (
+                        <div><span className="text-[var(--v4-ink-3)]">Passage level:</span> <span className="font-semibold">{linkedAnalysis.ai_analysis.passage_level_reached}</span></div>
+                      )}
+                      {linkedAnalysis.ai_analysis?.ufli_placement?.current_working_unit != null && (
+                        <div><span className="text-[var(--v4-ink-3)]">UFLI unit:</span> <span className="font-semibold">{linkedAnalysis.ai_analysis.ufli_placement.current_working_unit}</span></div>
+                      )}
+                      {linkedAnalysis.ai_analysis?.priority_gaps?.length > 0 && (
+                        <div><span className="text-[var(--v4-ink-3)]">Priority gaps:</span> <span className="font-semibold">{linkedAnalysis.ai_analysis.priority_gaps.length}</span></div>
+                      )}
+                      {linkedAnalysis.ai_analysis?.summary && (
+                        <div className="text-[var(--v4-ink-2)] pt-1 leading-relaxed">{linkedAnalysis.ai_analysis.summary}</div>
+                      )}
+                    </div>
+                  </div>
+                  {onJumpToAnalyses && (
+                    <button
+                      onClick={() => { onClose(); onJumpToAnalyses() }}
+                      className="text-[11.5px] font-semibold text-[var(--v4-purple)] hover:underline ml-6"
+                    >
+                      View full analysis →
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="border border-dashed border-[var(--v4-border-2)] rounded-[10px] p-4 text-[12.5px] text-[var(--v4-ink-3)]">
+                  This work hasn't been analyzed yet. Use <span className="font-semibold text-[var(--v4-ink-2)]">Run Analysis</span> to grade it.
+                </div>
+              )}
+            </section>
+          </div>
         </div>
       )}
     </div>
   )
+}
+
+function formatValue(v) {
+  if (Array.isArray(v)) return v.join(', ')
+  if (v && typeof v === 'object') return JSON.stringify(v)
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No'
+  return String(v)
 }
 
 function IconBtn({ children, onClick, title, danger }) {

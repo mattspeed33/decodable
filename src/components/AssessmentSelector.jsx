@@ -24,7 +24,7 @@ export default function AssessmentSelector({ assessments, selected, setSelected,
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Select Assessments for Analysis</h3>
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Select Student Work for Analysis</h3>
         <button onClick={onCancel} className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]" title="Cancel">
           <X className="w-4 h-4" />
         </button>
@@ -78,7 +78,7 @@ export default function AssessmentSelector({ assessments, selected, setSelected,
         className={`w-full justify-center py-2.5 ${selected.length === 0 || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <Sparkles className="w-3.5 h-3.5" />
-        {loading ? 'Analyzing…' : `Analyze ${selected.length} Assessment${selected.length !== 1 ? 's' : ''}`}
+        {loading ? 'Analyzing…' : `Analyze ${selected.length} Item${selected.length !== 1 ? 's' : ''}`}
       </BtnPrimary>
     </div>
   )
