@@ -334,13 +334,16 @@ function UploadStudentWorkForm({ onSave, onCancel }) {
   const [photos, setPhotos] = useState([])
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   async function handleSave() {
     if (photos.length === 0 || saving) return
     setSaving(true)
+    setError(null)
     try {
       await onSave({ photos, notes })
-    } catch {
+    } catch (err) {
+      setError(err?.message || 'Could not save the upload. Check your connection and try again.')
       setSaving(false)
     }
   }
@@ -356,12 +359,15 @@ function UploadStudentWorkForm({ onSave, onCancel }) {
         </div>
         <button
           onClick={onCancel}
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] shrink-0"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 shrink-0"
           title="Cancel"
+          aria-label="Cancel upload"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {error && <Banner tone="red">{error}</Banner>}
 
       <Card padding="p-4" className="space-y-2">
         <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Photos</p>
@@ -549,7 +555,8 @@ function IconBtn({ children, onClick, title, danger }) {
     <button
       onClick={onClick}
       title={title}
-      className={`w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] ${danger ? 'hover:text-[var(--v4-red)]' : 'hover:text-[var(--v4-ink)]'}`}
+      aria-label={title}
+      className={`w-8 h-8 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 ${danger ? 'hover:text-[var(--v4-red)]' : 'hover:text-[var(--v4-ink)]'}`}
     >
       {children}
     </button>
