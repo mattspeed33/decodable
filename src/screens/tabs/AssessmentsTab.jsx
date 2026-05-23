@@ -8,7 +8,7 @@ import {
 import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
 import { getAnalysisPrompt } from '../../prompts/analysisPrompt'
-import { serializeFormData } from '../../lib/assessmentFormSchemas'
+import { serializeFormData, getFormDisplay } from '../../lib/assessmentFormSchemas'
 import { SKILLS_CATEGORIES } from '../../lib/skillsCategories'
 import CategoryPicker from '../../components/CategoryPicker.jsx'
 import AssessmentForm from '../../components/AssessmentForm.jsx'
@@ -399,12 +399,7 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
   const [zoomed, setZoomed] = useState(null) // index of full-size photo
   const photos = (work.photos || []).filter(p => typeof p === 'string')
   const linkedAnalysis = analyses.find(an => Array.isArray(an.assessment_ids) && an.assessment_ids.includes(work.id))
-  const formEntries = Object.entries(work.form_data || {}).filter(([, v]) => {
-    if (v == null || v === '') return false
-    if (Array.isArray(v) && v.length === 0) return false
-    if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) return false
-    return true
-  })
+  const formRows = getFormDisplay(work.category_id, work.form_data)
 
   useEffect(() => {
     function onKey(e) {
@@ -478,20 +473,20 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
               </section>
             )}
 
-            {formEntries.length > 0 && (
+            {formRows.length > 0 && (
               <section>
                 <h4 className="text-[11px] font-bold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-2">
                   Form entries
                 </h4>
                 <div className="border border-[var(--v4-border)] rounded-[10px] overflow-hidden">
-                  {formEntries.map(([k, v], i) => (
+                  {formRows.map(({ label, value }, i) => (
                     <div
-                      key={k}
-                      className={`grid gap-3 px-3 py-2 text-[12.5px] ${i === formEntries.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
+                      key={i}
+                      className={`grid gap-3 px-3 py-2 text-[12.5px] ${i === formRows.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}`}
                       style={{ gridTemplateColumns: '180px 1fr' }}
                     >
-                      <div className="text-[var(--v4-ink-3)] font-medium">{k}</div>
-                      <div className="text-[var(--v4-ink)] font-mono break-words">{formatValue(v)}</div>
+                      <div className="text-[var(--v4-ink-3)] font-medium">{label}</div>
+                      <div className="text-[var(--v4-ink)] font-medium break-words">{value}</div>
                     </div>
                   ))}
                 </div>
@@ -541,13 +536,6 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
       )}
     </div>
   )
-}
-
-function formatValue(v) {
-  if (Array.isArray(v)) return v.join(', ')
-  if (v && typeof v === 'object') return JSON.stringify(v)
-  if (typeof v === 'boolean') return v ? 'Yes' : 'No'
-  return String(v)
 }
 
 function IconBtn({ children, onClick, title, danger }) {
