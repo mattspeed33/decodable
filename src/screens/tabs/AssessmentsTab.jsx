@@ -497,7 +497,7 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
                 AI Analysis
               </h4>
               {linkedAnalysis ? (
-                <div className="border border-[var(--v4-purple-lt)] rounded-[10px] bg-[var(--v4-purple-lt)] p-4 space-y-2">
+                <div className="border border-[var(--v4-border)] rounded-[10px] p-4 space-y-2">
                   <div className="flex items-start gap-2.5">
                     <Brain className="w-4 h-4 text-[var(--v4-purple)] mt-0.5 shrink-0" />
                     <div className="flex-1 text-[12.5px] text-[var(--v4-ink)] space-y-1">
@@ -518,7 +518,7 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
                   {onJumpToAnalyses && (
                     <button
                       onClick={() => { onClose(); onJumpToAnalyses() }}
-                      className="text-[11.5px] font-semibold text-[var(--v4-purple)] hover:underline ml-6"
+                      className="text-[11.5px] font-semibold text-[var(--v4-purple)] hover:underline ml-[26px]"
                     >
                       View full analysis →
                     </button>
