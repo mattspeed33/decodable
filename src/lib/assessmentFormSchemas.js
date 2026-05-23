@@ -696,3 +696,72 @@ export function serializeFormData(categoryId, formData) {
   }
   return lines.join('\n')
 }
+
+// Return [{ label, value }, ...] in schema order for tutor-readable display
+// (used by the Student Work modal). Type-aware: sight-word-grid renders as
+// count summaries, spelling-row as a score + what was written, check fields
+// as Pass / Miss. Empty fields are filtered out.
+export function getFormDisplay(categoryId, formData) {
+  const schema = FORM_SCHEMAS[categoryId]
+  if (!schema || !formData) return []
+  const rows = []
+  for (const section of schema.sections) {
+    for (const field of section.fields) {
+      const val = formData[field.key]
+      if (val === '' || val === undefined || val === null) continue
+      if (Array.isArray(val) && val.length === 0) continue
+      if (typeof val === 'object' && !Array.isArray(val) && Object.keys(val).length === 0) continue
+
+      const label = field.label || field.word || prettifyKey(field.key)
+      let value
+
+      switch (field.type) {
+        case 'check':
+          value = val === true ? 'Pass' : val === false ? 'Miss' : null
+          break
+        case 'letter-grid':
+          value = `${val.length} of ${field.letters.length} known (${val.join(', ')})`
+          break
+        case 'check-grid':
+          value = `${val.length} of ${field.items.length} (${val.join(', ')})`
+          break
+        case 'sight-word-grid': {
+          const auto = Object.entries(val).filter(([, v]) => v === 'A').length
+          const slow = Object.entries(val).filter(([, v]) => v === 'S').length
+          const unknown = Object.entries(val).filter(([, v]) => v === 'X').length
+          const parts = []
+          if (auto) parts.push(`${auto} automatic`)
+          if (slow) parts.push(`${slow} slow`)
+          if (unknown) parts.push(`${unknown} unknown`)
+          value = parts.join(' · ') || null
+          break
+        }
+        case 'spelling-row': {
+          if (!val.score) continue
+          const scoreLabel = val.score === 'C' ? 'Correct' : val.score === 'P' ? 'Phonetically plausible' : 'Random error'
+          const wrote = val.student_wrote ? ` (wrote "${val.student_wrote}")` : ''
+          const errPattern = val.error ? ` — ${val.error}` : ''
+          value = `${scoreLabel}${wrote}${errPattern}`
+          break
+        }
+        case 'fluency-select': {
+          const opt = FLUENCY_OPTIONS.find(o => o.value === val)
+          value = opt?.label || val
+          break
+        }
+        case 'score-3':
+          value = `${val} of 3`
+          break
+        default:
+          value = String(val)
+      }
+
+      if (value != null) rows.push({ label, value })
+    }
+  }
+  return rows
+}
+
+function prettifyKey(key) {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}

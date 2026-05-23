@@ -21,7 +21,7 @@ export default function AnalysisTab({ studentId }) {
       <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-10 text-center">
         <Brain className="w-5 h-5 mx-auto mb-2 text-[var(--v4-ink-3)]" />
         <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">No analyses yet</p>
-        <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Run one from the Assessments tab.</p>
+        <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Run one from the Student Work tab.</p>
       </div>
     )
   }

@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-23T00:00:00Z",
+  "title": "Design System: Decodable",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "#1a1a1a",
+        "tonalRamp": ["#1a1a1a", "#2e2e2e", "#4a4a4a", "#6a6a6a", "#9a9a9a", "#bdbdb8", "#d4d4cf", "#e8e6e0"]
+      },
+      "paper-bg": {
+        "role": "neutral",
+        "displayName": "Paper Background",
+        "canonical": "#f5f3ef",
+        "tonalRamp": ["#1a1a1a", "#4a4a4a", "#9a9a9a", "#d4d4cf", "#e8e6e0", "#f0eee9", "#faf9f6", "#ffffff"]
+      },
+      "paper-surface": {
+        "role": "neutral",
+        "displayName": "Paper Surface",
+        "canonical": "#ffffff"
+      },
+      "paper-surface-2": {
+        "role": "neutral",
+        "displayName": "Paper Surface (Hover)",
+        "canonical": "#faf9f6"
+      },
+      "paper-surface-3": {
+        "role": "neutral",
+        "displayName": "Paper Surface (Compressed)",
+        "canonical": "#f0eee9"
+      },
+      "rule-line": {
+        "role": "neutral",
+        "displayName": "Rule Line",
+        "canonical": "#e8e6e0"
+      },
+      "status-green": {
+        "role": "tertiary",
+        "displayName": "Status Green",
+        "canonical": "#16a34a",
+        "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#86efac", "#dcfce7"]
+      },
+      "status-amber": {
+        "role": "tertiary",
+        "displayName": "Status Amber",
+        "canonical": "#d97706",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fef3c7"]
+      },
+      "status-red": {
+        "role": "tertiary",
+        "displayName": "Status Red",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#fca5a5", "#fee2e2"]
+      },
+      "tag-blue": {
+        "role": "tertiary",
+        "displayName": "Tag Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#93c5fd", "#dbeafe"]
+      },
+      "tag-purple": {
+        "role": "tertiary",
+        "displayName": "Tag Purple",
+        "canonical": "#7c3aed",
+        "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#c4b5fd", "#ede9fe"]
+      },
+      "tag-teal": {
+        "role": "tertiary",
+        "displayName": "Tag Teal",
+        "canonical": "#0d9488",
+        "tonalRamp": ["#042f2e", "#134e4a", "#115e59", "#0f766e", "#0d9488", "#14b8a6", "#5eead4", "#ccfbf1"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles and student names. One per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Card and section headings." },
+      "title": { "displayName": "Title", "purpose": "List row titles and modal subjects." },
+      "body": { "displayName": "Body", "purpose": "Default text, button labels, form values." },
+      "label": { "displayName": "Eyebrow Label", "purpose": "Uppercase section markers in panels and nav." },
+      "mono": { "displayName": "Mono", "purpose": "Dates, IDs, tutor names, transcribed values." }
+    },
+    "shadows": [
+      {
+        "name": "active-tile",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "purpose": "Lifts the active sidebar nav item ~1px off the rail. The only shadow that ships."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-colors",
+        "value": "background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out",
+        "purpose": "Default hover transition. Applied via Tailwind's transition-colors utility."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Decisive ink-on-paper action. Used once per surface for the primary CTA.",
+      "html": "<button class=\"ds-btn-primary\">Save Student</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: #1a1a1a; color: #ffffff; font-family: 'Geist', -apple-system, sans-serif; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-primary:hover { background: #0d0a08; } .ds-btn-primary:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quieter sibling to the primary. Carries secondary actions on the same surface.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; background: #ffffff; color: #4a4a4a; font-family: 'Geist', -apple-system, sans-serif; font-size: 12.5px; font-weight: 500; border: 1px solid #e8e6e0; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-secondary:hover { background: #f0eee9; } .ds-btn-secondary:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A piece of paper on the desk. Bordered, unshadowed.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-eyebrow\">STUDENT</p><p class=\"ds-card-title\">Recent Student Work</p><p class=\"ds-card-body\">Snap a photo of any reading or writing the student has done. Decodable will analyze it.</p></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e8e6e0; border-radius: 10px; padding: 20px; font-family: 'Geist', -apple-system, sans-serif; max-width: 380px; } .ds-card-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #9a9a9a; margin: 0 0 10px; } .ds-card-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0 0 6px; } .ds-card-body { font-size: 13px; font-weight: 500; color: #4a4a4a; line-height: 1.45; margin: 0; }"
+    },
+    {
+      "name": "List Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "Signature ledger row. Tinted icon tile + title + sub + date. Hover tints the row.",
+      "html": "<div class=\"ds-list-table\"><div class=\"ds-list-row\"><div class=\"ds-list-icon ds-icon-blue\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 11l3 3L22 4\"/><path d=\"M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\"/></svg></div><div class=\"ds-list-text\"><div class=\"ds-list-title\">Sight-Word Fluency <span class=\"ds-list-tag\">Unit 12</span></div><div class=\"ds-list-sub\">62 WCPM · 28/30 words</div></div><div class=\"ds-list-date\">May 18</div></div><div class=\"ds-list-row\"><div class=\"ds-list-icon ds-icon-purple\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/></svg></div><div class=\"ds-list-text\"><div class=\"ds-list-title\">Oral Reading Fluency</div><div class=\"ds-list-sub\">3 photos uploaded</div></div><div class=\"ds-list-date\">May 14</div></div></div>",
+      "css": ".ds-list-table { background: #ffffff; border: 1px solid #e8e6e0; border-radius: 10px; overflow: hidden; font-family: 'Geist', -apple-system, sans-serif; max-width: 480px; } .ds-list-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #e8e6e0; transition: background-color 150ms ease-out; } .ds-list-row:last-child { border-bottom: 0; } .ds-list-row:hover { background: #faf9f6; } .ds-list-icon { width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; } .ds-icon-blue { background: #dbeafe; color: #2563eb; } .ds-icon-purple { background: #ede9fe; color: #7c3aed; } .ds-list-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; } .ds-list-title { font-size: 13px; font-weight: 500; color: #1a1a1a; display: inline-flex; align-items: center; gap: 6px; } .ds-list-sub { font-size: 11.5px; color: #9a9a9a; } .ds-list-tag { font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #ede9fe; color: #7c3aed; } .ds-list-date { font-size: 11.5px; color: #9a9a9a; white-space: nowrap; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Standard text input. Border darkens on focus, no glow.",
+      "html": "<input class=\"ds-input\" placeholder=\"Student first name\" />",
+      "css": ".ds-input { width: 100%; max-width: 280px; padding: 8px 12px; border: 1px solid #e8e6e0; border-radius: 6px; background: #ffffff; font-family: 'Geist', -apple-system, sans-serif; font-size: 13px; color: #1a1a1a; transition: border-color 150ms ease-out; box-sizing: border-box; } .ds-input::placeholder { color: #9a9a9a; } .ds-input:focus { outline: none; border-color: #1a1a1a; }"
+    },
+    {
+      "name": "Eyebrow Label",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signature uppercase section marker. The system's rhythm depends on this appearing at the top of every panel section.",
+      "html": "<p class=\"ds-eyebrow\">Skills</p>",
+      "css": ".ds-eyebrow { font-family: 'Geist', -apple-system, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #9a9a9a; margin: 0; }"
+    },
+    {
+      "name": "Status Dot",
+      "kind": "custom",
+      "refersTo": "status-dot",
+      "description": "Signature 7px solid circle. Stands inline next to a label.",
+      "html": "<span class=\"ds-status-row\"><span class=\"ds-dot ds-dot-green\"></span>Ahead · 2nd grade</span>",
+      "css": ".ds-status-row { display: inline-flex; align-items: center; gap: 6px; font-family: 'Geist', -apple-system, sans-serif; font-size: 12px; font-weight: 500; color: #1a1a1a; } .ds-dot { display: inline-block; width: 7px; height: 7px; border-radius: 9999px; flex-shrink: 0; } .ds-dot-green { background: #16a34a; } .ds-dot-amber { background: #d97706; } .ds-dot-red { background: #dc2626; } .ds-dot-blue { background: #2563eb; } .ds-dot-inactive { background: #d4d4cf; }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Tinted classification chip. Background uses the tint, text uses the solid.",
+      "html": "<span class=\"ds-tag-row\"><span class=\"ds-tag ds-tag-blue\">Unit 12</span><span class=\"ds-tag ds-tag-purple\">1:1</span><span class=\"ds-tag ds-tag-green\">On track</span></span>",
+      "css": ".ds-tag-row { display: inline-flex; gap: 6px; font-family: 'Geist', -apple-system, sans-serif; } .ds-tag { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 600; } .ds-tag-blue { background: #dbeafe; color: #2563eb; } .ds-tag-purple { background: #ede9fe; color: #7c3aed; } .ds-tag-green { background: #dcfce7; color: #16a34a; } .ds-tag-amber { background: #fef3c7; color: #d97706; } .ds-tag-red { background: #fee2e2; color: #dc2626; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tutor's Notebook",
+    "overview": "Decodable is software that feels like a tutor's actual notebook: warm paper, ink, ruled lines, and the same patient density a working tutor builds up across a year of sessions. Every screen is a page you'd be proud to leave open on a desk during a parent meeting. The aesthetic prioritizes calm over excitement; the user is a teacher doing careful work for a child, not a power user grinding through tickets.\n\nDensity is high but never crowded. Information lives in ruled tables, eyebrow labels, and short titled paragraphs rather than tiles and metric heroes. Color is restrained and warm. Type carries most of the hierarchy. Surfaces are flat: depth comes from ink weight, rule lines, and rhythm, not shadows.\n\nThis system explicitly rejects four families: kid-coded edtech, SaaS dashboard cliché, clinical software, and creator-tool maximalism. Decodable is for an adult professional, in daylight, with kindness in the voice.",
+    "keyCharacteristics": [
+      "Warm off-white paper (#f5f3ef) is the dominant surface, never pure white as the background.",
+      "Ink-on-paper contrast (#1a1a1a on #ffffff cards) carries primary affordances.",
+      "Status color appears only when it earns it: a tag, a dot, a banner. Not as decoration.",
+      "Geist (sans) carries body and UI; Geist Mono carries data, IDs, and dates.",
+      "Flat by default. No shadows on rest state. Hover lifts via background tint, not elevation."
+    ],
+    "rules": [
+      { "name": "The Ink-Carries-Action Rule", "body": "Primary action color is ink, not purple, not green, not blue. If a button needs attention, ink-on-paper is the strongest signal in the system; reach for color only when ink is already in use nearby.", "section": "colors" },
+      { "name": "The Tint-or-Solid Rule", "body": "Status colors appear as a saturated solid (dot, icon) OR as a -tint background carrying its same-hue solid text. Never as a saturated background carrying white text in product UI.", "section": "colors" },
+      { "name": "The Pure-Black Prohibition", "body": "Never #000. Hover state on the primary button is the only place black appears.", "section": "colors" },
+      { "name": "The Eyebrow Rule", "body": "Every panel section in the right sidebar leads with an uppercase 11px label at 0.6px tracking. Removing the eyebrow flattens the rhythm.", "section": "typography" },
+      { "name": "The Tracking-Tightens-As-Size-Grows Rule", "body": "Body and small sizes use normal tracking. The 22px display tightens to -0.5px.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Cards, list rows, modals, and panels carry no shadow at rest. If a surface needs to read as primary, increase its ink content or thicken its border, do not float it.", "section": "elevation" },
+      { "name": "The Hover-Tints-Don't-Lift Rule", "body": "Hover state on rows and cards swaps the background from paper-surface to paper-surface-2. Never transform: translateY(). Never a shadow ramp.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do lead each panel section with an 11px uppercase 0.6px-tracked eyebrow label.",
+      "Do use #1a1a1a ink on #ffffff cards, on #f5f3ef paper.",
+      "Do carry hover state by swapping paper-surface ↔ paper-surface-2.",
+      "Do use Geist Mono for dates, IDs, tutor names in tables.",
+      "Do keep status color rare. A row that uses no color is the norm.",
+      "Do prefer ruled list rows for showing many things. Cards are for one thing at a time."
+    ],
+    "donts": [
+      "Don't ship a Duolingo-style edtech aesthetic: lime greens, cartoon mascots, gamification badges, gradient buttons.",
+      "Don't ship a SaaS dashboard cliché: purple-to-blue gradients, hero metric tiles, identical card grids.",
+      "Don't ship a clinical / medical look: sterile pure-white background, teal accent strips.",
+      "Don't ship a creator-tool look: dark mode, neon accents, complex panels.",
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe.",
+      "Don't use background-clip: text gradient text.",
+      "Don't add box-shadow to cards or rows.",
+      "Don't use transform: translateY() on hover.",
+      "Don't introduce a new accent color outside the six semantic colors.",
+      "Don't use em dashes in UI copy.",
+      "Don't wrap everything in a card.",
+      "Don't nest cards inside cards.",
+      "Don't revive the legacy palette (--primary, --green, --orange, --red, --blue, --gold)."
+    ]
+  }
+}

@@ -265,7 +265,7 @@ Previous sessions completed: ${allSessions.length}
 
         {mode === 'intake' && (
           <div className="bg-[var(--v4-blue-lt)] rounded-md p-3 text-[12.5px] text-[var(--v4-blue)] font-medium">
-            Go to the Assessments tab to complete the intake assessment first, then come back here.
+            Go to the Student Work tab to complete the intake assessment first, then come back here.
           </div>
         )}
 
