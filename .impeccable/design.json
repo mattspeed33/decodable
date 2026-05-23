@@ -108,7 +108,7 @@
       "refersTo": "button-primary",
       "description": "Decisive ink-on-paper action. Used once per surface for the primary CTA.",
       "html": "<button class=\"ds-btn-primary\">Save Student</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: #1a1a1a; color: #ffffff; font-family: 'Geist', -apple-system, sans-serif; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-primary:hover { background: #000000; } .ds-btn-primary:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: #1a1a1a; color: #ffffff; font-family: 'Geist', -apple-system, sans-serif; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-primary:hover { background: #0d0a08; } .ds-btn-primary:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }"
     },
     {
       "name": "Secondary Button",

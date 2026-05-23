@@ -218,22 +218,19 @@ export default function AssessmentsTab({ studentId, onRefresh, onJumpToAnalyses,
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
-      <div className="flex items-baseline justify-between gap-2 flex-wrap">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Student Work</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          {hasAssessments && (
-            <BtnSecondary onClick={() => { setSelectedForAnalysis(assessments.map(a => a.id)); setView('select-for-analysis') }}>
-              <Sparkles className="w-3.5 h-3.5" /> Run Analysis
-            </BtnSecondary>
-          )}
-          <BtnSecondary onClick={() => setView('pick-category')}>
-            <ClipboardList className="w-3.5 h-3.5" /> New Assessment
+      {/* ACTIONS */}
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        {hasAssessments && (
+          <BtnSecondary onClick={() => { setSelectedForAnalysis(assessments.map(a => a.id)); setView('select-for-analysis') }}>
+            <Sparkles className="w-3.5 h-3.5" /> Run Analysis
           </BtnSecondary>
-          <BtnPrimary onClick={() => setView('upload')}>
-            <Upload className="w-3.5 h-3.5" /> Upload Student Work
-          </BtnPrimary>
-        </div>
+        )}
+        <BtnSecondary onClick={() => setView('pick-category')}>
+          <ClipboardList className="w-3.5 h-3.5" /> New Assessment
+        </BtnSecondary>
+        <BtnPrimary onClick={() => setView('upload')}>
+          <Upload className="w-3.5 h-3.5" /> Upload Student Work
+        </BtnPrimary>
       </div>
 
       {error && <Banner tone="red">{error}</Banner>}
@@ -519,7 +516,7 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
                   {onJumpToAnalyses && (
                     <button
                       onClick={() => { onClose(); onJumpToAnalyses() }}
-                      className="text-[11.5px] font-semibold text-[var(--v4-purple)] hover:underline ml-[26px]"
+                      className="text-[11.5px] font-semibold text-[var(--v4-purple)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 rounded-sm ml-[26px]"
                     >
                       View full analysis →
                     </button>

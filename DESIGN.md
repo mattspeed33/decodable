@@ -80,7 +80,7 @@ components:
     rounded: "{rounded.md}"
     padding: "6px 14px"
   button-primary-hover:
-    backgroundColor: "#000000"
+    backgroundColor: "#0d0a08"
   button-secondary:
     backgroundColor: "{colors.paper-surface}"
     textColor: "{colors.ink-2}"
@@ -163,7 +163,7 @@ Semantic-only. None of these is a brand color; each carries meaning.
 
 **The Tint-or-Solid Rule.** Status colors appear as a saturated solid (dot, icon) OR as a `-tint` background carrying its same-hue solid text. Never as a saturated background carrying white text in product UI. Reserve white-on-saturated for banner-level confirmations only.
 
-**The Pure-Black Prohibition.** Never `#000`. Hover state on the primary button is the only place black appears, and it sits next to ink-on-paper, not as a primary surface.
+**The Pure-Black Prohibition.** Never `#000`, anywhere. The primary button's hover state uses a warm-tinted dark (`#0d0a08`) that reads visibly darker than ink against the button's resting state but stays inside the warm-neutral system.
 
 ## 3. Typography
 
@@ -210,7 +210,7 @@ Every component reads as a notebook element first and a UI primitive second. But
 
 ### Buttons
 - **Shape:** small rectangles with a `6px` corner (`rounded-md`). Never pill-shaped except status dots.
-- **Primary:** `paper-surface` text on `ink` background, 6px / 14px padding. Hover deepens to pure `#000`. The hover is the only place black appears in the system.
+- **Primary:** `paper-surface` text on `ink` background, 6px / 14px padding. Hover deepens to a warm-tinted dark (`#0d0a08`). The system has no place for pure `#000`.
 - **Secondary:** `ink-2` text on `paper-surface` with a 1px `rule-line` border, 6px / 12px padding. Hover swaps surface for `paper-surface-3`.
 - **Icon button:** 28px square, ink-3 default, hover ink-2 on `paper-surface-3`. Used for inline edit / delete actions in list rows.
 
@@ -224,6 +224,9 @@ Every component reads as a notebook element first and a UI primitive second. But
 - **Border:** 1px `rule-line`.
 - **Shadow:** none.
 - **Internal Padding:** 20px (`p-5`) default; 12px / 14px for compact `HighlightCard`; 0 when the card hosts a list table directly so the table's own dividers can run flush.
+
+#### Primary CTA Card (variant)
+For dual-card empty states where one path is meaningfully primary, the primary card gets a **1px `ink` border** (`border-[var(--v4-ink)]`) instead of the default `rule-line`. The secondary card in the same row keeps the default `rule-line` border. The result is two cards of equal width that read with clear hierarchy: the dark-bordered one is the recommended path, the light-bordered one is the alternative. Use sparingly; this is the only place ink-on-paper appears as a *border* color in the system, and it loses its weight if applied everywhere.
 
 ### Inputs / Fields
 - **Style:** 1px `rule-line` border, `paper-surface` background, 6px corner, 8px / 12px padding, 13px body type.
