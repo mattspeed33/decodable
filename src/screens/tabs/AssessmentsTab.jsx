@@ -412,19 +412,19 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--v4-ink)]/50 p-6"
       onClick={() => (zoomed != null ? setZoomed(null) : onClose())}
     >
       {zoomed != null ? (
         <img
           src={photoSrc(photos[zoomed])}
           alt=""
-          className="max-w-full max-h-full object-contain rounded-md shadow-xl"
+          className="max-w-full max-h-full object-contain rounded-md"
           onClick={(e) => { e.stopPropagation(); setZoomed(null) }}
         />
       ) : (
         <div
-          className="bg-[var(--v4-surface)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+          className="bg-[var(--v4-surface)] rounded-[10px] max-w-3xl w-full max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--v4-border)]">
@@ -442,8 +442,9 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]"
+              className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] focus-visible:outline-2 focus-visible:outline focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2"
               title="Close"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
@@ -460,8 +461,9 @@ function WorkLightbox({ work, analyses, onClose, onJumpToAnalyses }) {
                     <button
                       key={i}
                       onClick={() => setZoomed(i)}
-                      className="block w-full aspect-[4/3] overflow-hidden rounded-md border border-[var(--v4-border)] hover:border-[var(--v4-ink)] transition-colors"
+                      className="block w-full aspect-[4/3] overflow-hidden rounded-md border border-[var(--v4-border)] hover:border-[var(--v4-ink)] transition-colors focus-visible:outline-2 focus-visible:outline focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2"
                       title="Click to expand"
+                      aria-label={`View photo ${i + 1} full size`}
                     >
                       <img src={photoSrc(p)} alt="" className="w-full h-full object-cover" />
                     </button>
