@@ -103,21 +103,22 @@ export const SKILL_BENCHMARKS = {
   },
 }
 
-// Calculate status: Behind (🔴), On Track (🟡), Ahead (🟢)
+// Calculate status: Behind / On Track / Ahead. Colors come from v4 tokens
+// so consumers stay inside the design system.
 export function getStatus(currentLevel, studentGrade) {
   const expected = EXPECTED_LEVEL[studentGrade]
-  if (!expected || !currentLevel) return { status: 'unknown', label: 'Not Assessed', color: '#9ca3af' }
+  if (!expected || !currentLevel) return { status: 'unknown', label: 'Not Assessed', color: 'var(--v4-ink-4)' }
 
   const currentIdx = GRADE_LEVELS.findIndex(g => g.key === currentLevel)
   const expectedIdx = GRADE_LEVELS.findIndex(g => g.key === expected)
 
-  if (currentIdx < 0 || expectedIdx < 0) return { status: 'unknown', label: 'Not Assessed', color: '#9ca3af' }
+  if (currentIdx < 0 || expectedIdx < 0) return { status: 'unknown', label: 'Not Assessed', color: 'var(--v4-ink-4)' }
 
   const diff = currentIdx - expectedIdx
 
-  if (diff >= 0) return { status: 'ahead', label: 'Ahead', color: 'var(--green)', emoji: '🟢' }
-  if (diff >= -1) return { status: 'on-track', label: 'On Track', color: 'var(--orange)', emoji: '🟡' }
-  return { status: 'behind', label: 'Behind', color: 'var(--red)', emoji: '🔴' }
+  if (diff >= 0) return { status: 'ahead', label: 'Ahead', color: 'var(--v4-green)' }
+  if (diff >= -1) return { status: 'on-track', label: 'On Track', color: 'var(--v4-amber)' }
+  return { status: 'behind', label: 'Behind', color: 'var(--v4-red)' }
 }
 
 // Get bar fill percentage (0–100) for a grade level
