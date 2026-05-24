@@ -15,13 +15,14 @@ function initials(name) {
 }
 
 // Stable color per name so a parent's avatar doesn't reshuffle on rerender.
+// Uses v4 tone tokens via CSS vars so the system stays the source of truth.
 const AVATAR_BGS = [
-  ['#ede9fe', '#7c3aed'], // purple
-  ['#dbeafe', '#2563eb'], // blue
-  ['#dcfce7', '#16a34a'], // green
-  ['#fef3c7', '#d97706'], // amber
-  ['#ccfbf1', '#0d9488'], // teal
-  ['#fee2e2', '#dc2626'], // red
+  ['var(--v4-purple-lt)', 'var(--v4-purple)'],
+  ['var(--v4-blue-lt)',   'var(--v4-blue)'],
+  ['var(--v4-green-lt)',  'var(--v4-green)'],
+  ['var(--v4-amber-lt)',  'var(--v4-amber)'],
+  ['var(--v4-teal-lt)',   'var(--v4-teal)'],
+  ['var(--v4-red-lt)',    'var(--v4-red)'],
 ]
 function avatarColors(seed) {
   if (!seed) return AVATAR_BGS[0]
@@ -74,10 +75,15 @@ export default function ParentHubTab({ studentId }) {
     }
   }
 
-  function handleCopy() {
-    navigator.clipboard.writeText(`Subject: ${draft.subject}\n\n${draft.body}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function handleCopy() {
+    setError(null)
+    try {
+      await navigator.clipboard.writeText(`Subject: ${draft.subject}\n\n${draft.body}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setError('Could not copy to clipboard. Select the text manually or try Open in Mail.')
+    }
   }
 
   function handleMailto() {
@@ -85,18 +91,23 @@ export default function ParentHubTab({ studentId }) {
   }
 
   async function handleSaveDraft() {
-    await saveEmail({
-      id: crypto.randomUUID(),
-      student_id: studentId,
-      session_number: lastSession?.ses_number || 1,
-      date_sent: new Date().toISOString().split('T')[0],
-      subject: draft.subject,
-      body: draft.body,
-      summary_for_next_prompt: `Session ${lastSession?.ses_number || 1}: ${notes || 'General session update'}`,
-      created_at: new Date().toISOString(),
-    })
-    setSavedDraft(true)
-    refreshEmails()
+    setError(null)
+    try {
+      await saveEmail({
+        id: crypto.randomUUID(),
+        student_id: studentId,
+        session_number: lastSession?.ses_number || 1,
+        date_sent: new Date().toISOString().split('T')[0],
+        subject: draft.subject,
+        body: draft.body,
+        summary_for_next_prompt: `Session ${lastSession?.ses_number || 1}: ${notes || 'General session update'}`,
+        created_at: new Date().toISOString(),
+      })
+      setSavedDraft(true)
+      refreshEmails()
+    } catch (err) {
+      setError(err?.message || 'Could not save the draft. Check your connection and try again.')
+    }
   }
 
   function closeDraft() {
@@ -111,7 +122,7 @@ export default function ParentHubTab({ studentId }) {
     return (
       <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] px-4 py-12 text-center">
         <Mail className="w-6 h-6 mx-auto mb-2 text-[var(--v4-ink-3)]" />
-        <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">Upload an assessment first</p>
+        <p className="text-[13px] font-medium text-[var(--v4-ink-2)]">Upload student work first</p>
         <p className="text-[12px] text-[var(--v4-ink-3)] mt-0.5">Email drafts use the analysis to personalize.</p>
       </div>
     )
@@ -119,19 +130,16 @@ export default function ParentHubTab({ studentId }) {
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Emails</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-[11.5px] text-[var(--v4-ink-3)]">
-            {student.parent_email || 'No parent email on file'}
-          </span>
-          {!composing && !draft && (
-            <BtnPrimary onClick={() => setComposing(true)}>
-              <Sparkles className="w-3.5 h-3.5" /> Draft Email
-            </BtnPrimary>
-          )}
-        </div>
+      {/* ACTIONS */}
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        <span className="text-[11.5px] text-[var(--v4-ink-3)] mr-auto">
+          {student.parent_email || 'No parent email on file'}
+        </span>
+        {!composing && !draft && (
+          <BtnPrimary onClick={() => setComposing(true)}>
+            <Sparkles className="w-3.5 h-3.5" /> Draft Email
+          </BtnPrimary>
+        )}
       </div>
 
       {/* COMPOSE / DRAFT */}
@@ -146,7 +154,7 @@ export default function ParentHubTab({ studentId }) {
         />
       )}
 
-      {drafting && <LoadingState messages={['✉️ Drafting email...', '💬 Polishing the tone...']} />}
+      {drafting && <LoadingState messages={['Drafting email…', 'Polishing the tone…']} />}
 
       {draft && (
         <GeneratedDraftCard
@@ -154,6 +162,7 @@ export default function ParentHubTab({ studentId }) {
           parentEmail={student.parent_email}
           copied={copied}
           saved={savedDraft}
+          error={error}
           onCopy={handleCopy}
           onMailto={handleMailto}
           onSave={handleSaveDraft}
@@ -196,7 +205,8 @@ function EmailRow({ email, parent, parentEmail, expanded, onToggle, isLast }) {
     <div className={`${isLast ? '' : 'border-b border-[var(--v4-border)]'}`}>
       <button
         onClick={onToggle}
-        className="w-full grid items-start gap-3 px-4 py-3 text-left hover:bg-[var(--v4-surface-2)] transition-colors"
+        aria-expanded={expanded}
+        className="w-full grid items-start gap-3 px-4 py-3 text-left hover:bg-[var(--v4-surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:-outline-offset-2 transition-colors"
         style={{ gridTemplateColumns: '32px 1fr auto' }}
       >
         <div
@@ -243,7 +253,12 @@ function DraftCard({ notes, setNotes, onGenerate, onCancel, error }) {
     <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Draft Progress Email</p>
-        <button onClick={onCancel} className="text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)]">
+        <button
+          onClick={onCancel}
+          aria-label="Cancel draft"
+          title="Cancel"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -268,12 +283,17 @@ function DraftCard({ notes, setNotes, onGenerate, onCancel, error }) {
   )
 }
 
-function GeneratedDraftCard({ email, parentEmail, copied, saved, onCopy, onMailto, onSave, onRegen, onClose }) {
+function GeneratedDraftCard({ email, parentEmail, copied, saved, error, onCopy, onMailto, onSave, onRegen, onClose }) {
   return (
     <div className="border border-[var(--v4-border)] rounded-[10px] bg-[var(--v4-surface)] overflow-hidden">
       <div className="px-4 py-3 border-b border-[var(--v4-border)] flex items-center justify-between bg-[var(--v4-surface-2)]">
         <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Draft</p>
-        <button onClick={onClose} className="text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)]">
+        <button
+          onClick={onClose}
+          aria-label="Close draft"
+          title="Close"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -281,12 +301,17 @@ function GeneratedDraftCard({ email, parentEmail, copied, saved, onCopy, onMailt
         <p className="text-[14px] font-semibold text-[var(--v4-ink)]">{email.subject}</p>
         <div className="text-[13px] text-[var(--v4-ink-2)] whitespace-pre-wrap leading-relaxed">{email.body}</div>
         {email.tutor_note && (
-          <div className="mt-3 bg-[var(--v4-amber-lt)] rounded-md p-3">
+          <div className="mt-3">
             <p className="text-[10px] font-bold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Tutor note (private)</p>
             <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-1">{email.tutor_note}</p>
           </div>
         )}
       </div>
+      {error && (
+        <div className="px-4 pb-3">
+          <div className="rounded-md bg-[var(--v4-red-lt)] px-3 py-2 text-[12px] text-[var(--v4-red)] font-medium">{error}</div>
+        </div>
+      )}
       <div className="px-4 py-3 border-t border-[var(--v4-border)] flex items-center gap-2 flex-wrap">
         <BtnPrimary onClick={onCopy}>
           <Copy className="w-3.5 h-3.5" /> {copied ? 'Copied' : 'Copy'}
