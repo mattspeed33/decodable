@@ -313,17 +313,14 @@ Previous sessions completed: ${allSessions.length}
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Sessions</h3>
-        {!mode && !plan && (
-          <div className="flex items-center gap-2">
-            <BtnSecondary onClick={() => setMode('log')}><PencilLine className="w-3.5 h-3.5" /> Log</BtnSecondary>
-            <BtnSecondary onClick={() => setMode('template')}><FileText className="w-3.5 h-3.5" /> Template</BtnSecondary>
-            <BtnPrimary onClick={() => setMode('plan')}><Plus className="w-3.5 h-3.5" /> Plan Session</BtnPrimary>
-          </div>
-        )}
-      </div>
+      {/* ACTIONS */}
+      {!mode && !plan && (
+        <div className="flex items-center justify-end gap-2 flex-wrap">
+          <BtnSecondary onClick={() => setMode('log')}><PencilLine className="w-3.5 h-3.5" /> Log</BtnSecondary>
+          <BtnSecondary onClick={() => setMode('template')}><FileText className="w-3.5 h-3.5" /> Template</BtnSecondary>
+          <BtnPrimary onClick={() => setMode('plan')}><Plus className="w-3.5 h-3.5" /> Plan Session</BtnPrimary>
+        </div>
+      )}
 
       {/* THIS WEEK CONTEXT */}
       {!mode && !plan && analysis && (
@@ -379,7 +376,7 @@ Previous sessions completed: ${allSessions.length}
               </select>
             </div>
             <div className="flex items-end">
-              <BtnPrimary onClick={handleGenerate} className="w-full justify-center py-2"><Sparkles className="w-3.5 h-3.5" /> Generate</BtnPrimary>
+              <BtnPrimary onClick={handleGenerate} className="w-full justify-center py-2"><Sparkles className="w-3.5 h-3.5" /> Generate Plan</BtnPrimary>
             </div>
           </div>
           <div>
@@ -559,7 +556,7 @@ Previous sessions completed: ${allSessions.length}
                       : tmpl.ufli_focus_unit_name,
                   })
                 }}
-                className="bg-[var(--v4-surface)] rounded-[10px] border border-[var(--v4-border)] p-4 text-left hover:border-[var(--v4-border-2)] hover:shadow-sm transition-all"
+                className="bg-[var(--v4-surface)] rounded-[10px] border border-[var(--v4-border)] p-4 text-left hover:bg-[var(--v4-surface-2)] hover:border-[var(--v4-border-2)] transition-colors"
               >
                 <span className="text-xl block mb-1">{tmpl.icon}</span>
                 <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{tmpl.name}</p>
@@ -612,19 +609,19 @@ Previous sessions completed: ${allSessions.length}
                           </div>
                         )}
                         {session.what_went_well && (
-                          <div className="bg-[var(--v4-green-lt)] rounded-md p-2.5">
+                          <div>
                             <p className="text-[10.5px] font-semibold text-[var(--v4-green)] uppercase tracking-[0.6px]">Went well</p>
                             <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{session.what_went_well}</p>
                           </div>
                         )}
                         {session.what_needs_more_work && (
-                          <div className="bg-[var(--v4-amber-lt)] rounded-md p-2.5">
+                          <div>
                             <p className="text-[10.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Needs work</p>
                             <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{session.what_needs_more_work}</p>
                           </div>
                         )}
                         {sa && (
-                          <div className="bg-white border border-[var(--v4-border)] rounded-md p-2.5 space-y-1.5">
+                          <div className="bg-[var(--v4-surface)] border border-[var(--v4-border)] rounded-md p-2.5 space-y-1.5">
                             <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Assessment</p>
                             <div className="flex flex-wrap gap-1.5">
                               <span className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">{sa.passage_level_reached}</span>
