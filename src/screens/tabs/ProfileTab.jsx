@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Info, Pencil } from 'lucide-react'
 import { getStudent, saveStudent, getLatestAnalysis, saveAnalysis, getLatestAssessment } from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
 import { runPrompt } from '../../lib/claude'
 import LoadingState from '../../components/LoadingState.jsx'
+import { BtnPrimary, BtnSecondary, Card } from '../../components/v4/primitives.jsx'
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const ENGAGEMENT_OPTIONS = [
@@ -30,6 +32,7 @@ export default function ProfileTab({ studentId, onRefresh, defaultEditing = fals
   const [editing, setEditing] = useState(defaultEditing)
   const [form, setForm] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [regenerating, setRegenerating] = useState(false)
 
   // Initialize form from loaded student. Re-syncs if student is refreshed.
@@ -39,18 +42,24 @@ export default function ProfileTab({ studentId, onRefresh, defaultEditing = fals
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [student])
 
-  if (loading || !student) return <p className="text-center text-gray-400 py-10 text-sm font-bold">Loading…</p>
+  if (loading || !student) return <p className="text-center text-[var(--v4-ink-3)] py-10 text-[13px] font-medium">Loading…</p>
 
   function update(key, value) {
     setForm(f => ({ ...f, [key]: value }))
   }
 
   async function handleSave() {
+    setSaveError(null)
     const oldEngagement = student.total_sessions_planned
     const newEngagement = form.total_sessions_planned
     const engagementChanged = oldEngagement !== newEngagement
 
-    await saveStudent(form)
+    try {
+      await saveStudent(form)
+    } catch (err) {
+      setSaveError(err?.message || 'Could not save changes. Check your connection and try again.')
+      return
+    }
 
     if (engagementChanged) {
       const analysisRecord = await getLatestAnalysis(studentId)
@@ -96,22 +105,25 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const inputClass = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent bg-white'
-  const labelClass = 'block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1'
-  const valueClass = 'text-sm font-semibold text-black'
+  const inputClass = 'w-full border border-[var(--v4-border)] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)]'
+  const labelClass = 'block text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px] mb-1'
+  const valueClass = 'text-[13px] font-medium text-[var(--v4-ink)]'
 
   if (regenerating) {
-    return <LoadingState messages={['🗓️ Updating the week plan...', '📊 Repacing skill progression...', '✅ Almost done...']} />
+    return <LoadingState messages={['Updating the week plan…', 'Repacing skill progression…', 'Almost done…']} />
   }
 
   if (!editing) {
     return (
       <div className="space-y-4">
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-black">👤 Student Info</h3>
-            <button onClick={() => { setForm({ ...student }); setEditing(true) }} className="text-xs font-bold text-[var(--primary)] hover:underline">Edit</button>
-          </div>
+        <div className="flex items-center justify-end">
+          <BtnSecondary onClick={() => { setForm({ ...student }); setEditing(true) }}>
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </BtnSecondary>
+        </div>
+
+        <Card>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)] mb-4">Student</h3>
           <div className="grid grid-cols-2 gap-4">
             <div><p className={labelClass}>Name</p><p className={valueClass}>{student.name}</p></div>
             <div><p className={labelClass}>Grade</p><p className={valueClass}>{student.grade}</p></div>
@@ -121,48 +133,48 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
             <div><p className={labelClass}>Session Length</p><p className={valueClass}>{student.session_length_minutes} min</p></div>
             <div><p className={labelClass}>Tutor</p><p className={valueClass}>{student.tutor_name}</p></div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-          <h3 className="font-black text-black mb-4">🗓️ Schedule</h3>
+        <Card>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)] mb-4">Schedule</h3>
           <div className="grid grid-cols-2 gap-4">
             <div><p className={labelClass}>Session Day</p><p className={valueClass}>{student.session_day || '—'}</p></div>
             <div><p className={labelClass}>Session Time</p><p className={valueClass}>{student.session_time || '—'}</p></div>
             <div><p className={labelClass}>Engagement Length</p><p className={valueClass}>{student.total_sessions_planned === 999 ? 'Ongoing' : `${student.total_sessions_planned} weeks`}</p></div>
             <div><p className={labelClass}>Start Date</p><p className={valueClass}>{student.start_date}</p></div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-          <h3 className="font-black text-black mb-4">👨‍👧 Parent Info</h3>
+        <Card>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)] mb-4">Parent</h3>
           <div className="grid grid-cols-2 gap-4">
             <div><p className={labelClass}>Parent Name</p><p className={valueClass}>{student.parent_name || '—'}</p></div>
             <div><p className={labelClass}>Parent Email</p><p className={valueClass}>{student.parent_email || '—'}</p></div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-          <h3 className="font-black text-black mb-3">📝 Intake Notes</h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
+        <Card>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)] mb-3">Intake Notes</h3>
+          <p className="text-[13px] text-[var(--v4-ink-2)] leading-relaxed">
             {student.notes_from_parent || 'No intake notes recorded.'}
           </p>
-        </div>
+        </Card>
 
         {student.curriculum_flags && (
-          <div className="bg-white rounded-2xl border-2 border-gray-100 p-6">
-            <h3 className="font-black text-black mb-3">📚 Curriculum Frameworks</h3>
-            <div className="flex flex-wrap gap-2">
+          <Card>
+            <h3 className="text-[15px] font-bold text-[var(--v4-ink)] mb-3">Curriculum Frameworks</h3>
+            <div className="flex flex-wrap gap-1.5">
               {Object.entries(student.curriculum_flags).filter(([, v]) => v).map(([key]) => (
-                <span key={key} className="text-xs bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1 rounded-full font-bold capitalize">
+                <span key={key} className="text-[10.5px] bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] px-1.5 py-0.5 rounded font-semibold capitalize">
                   {key.replace(/_/g, ' ')}
                 </span>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {saved && (
-          <div className="bg-[var(--green-light)] text-[var(--green)] rounded-xl p-3 text-sm font-bold text-center">✓ Changes saved</div>
+          <div className="rounded-md bg-[var(--v4-green-lt)] text-[var(--v4-green)] px-3 py-2 text-[12.5px] font-medium text-center">Changes saved.</div>
         )}
       </div>
     )
@@ -175,10 +187,15 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
+      <Card className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-black">👤 Edit Student</h3>
-          <button onClick={() => { setForm({ ...student }); setEditing(false) }} className="text-xs font-bold text-gray-400 hover:text-black">Cancel</button>
+          <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Edit Student</h3>
+          <button
+            onClick={() => { setForm({ ...student }); setEditing(false); setSaveError(null) }}
+            className="text-[12px] font-medium text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 rounded-sm px-1"
+          >
+            Cancel
+          </button>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -218,15 +235,15 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
             <input className={inputClass} value={form.tutor_name} onChange={e => update('tutor_name', e.target.value)} />
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
-        <h3 className="font-black text-black">🗓️ Schedule</h3>
+      <Card className="space-y-4">
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Schedule</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Session Day</label>
             <select className={inputClass} value={form.session_day || ''} onChange={e => update('session_day', e.target.value)}>
-              <option value="">Select day...</option>
+              <option value="">Select day…</option>
               {DAYS_OF_WEEK.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
@@ -247,17 +264,17 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
         </div>
 
         {engagementWillChange && hasAssessment && (
-          <div className="bg-[var(--blue-light)] rounded-xl p-3 flex items-start gap-2">
-            <span>💡</span>
-            <p className="text-xs text-[var(--blue)] font-bold">
-              Changing engagement length will regenerate the week plan from your latest assessment. This takes a few seconds.
+          <div className="flex items-start gap-2.5 text-[12px] text-[var(--v4-ink-2)]">
+            <Info className="w-4 h-4 text-[var(--v4-blue)] mt-0.5 shrink-0" />
+            <p>
+              Changing engagement length will regenerate the week plan from the latest assessment. This takes a few seconds.
             </p>
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
-        <h3 className="font-black text-black">👨‍👧 Parent Info</h3>
+      <Card className="space-y-4">
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Parent</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Parent Name</label>
@@ -268,16 +285,20 @@ ${a.patterns_to_watch?.map(p => `- ${p}`).join('\n')}
             <input className={inputClass} type="email" value={form.parent_email} onChange={e => update('parent_email', e.target.value)} />
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 space-y-4">
-        <h3 className="font-black text-black">📝 Intake Notes</h3>
-        <textarea className={inputClass + ' h-28'} value={form.notes_from_parent} onChange={e => update('notes_from_parent', e.target.value)} />
-      </div>
+      <Card className="space-y-4">
+        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Intake Notes</h3>
+        <textarea className={inputClass + ' h-28 resize-none'} value={form.notes_from_parent} onChange={e => update('notes_from_parent', e.target.value)} />
+      </Card>
 
-      <button onClick={handleSave} className="w-full bg-[var(--primary)] text-white py-3.5 rounded-full font-bold hover:bg-[var(--primary-hover)] transition shadow-sm">
-        {engagementWillChange && hasAssessment ? '✓ Save & Update Week Plan' : '✓ Save Changes'}
-      </button>
+      {saveError && (
+        <div className="rounded-md bg-[var(--v4-red-lt)] px-3 py-2 text-[12.5px] text-[var(--v4-red)] font-medium">{saveError}</div>
+      )}
+
+      <BtnPrimary onClick={handleSave} className="w-full justify-center py-2.5">
+        {engagementWillChange && hasAssessment ? 'Save and Update Week Plan' : 'Save Changes'}
+      </BtnPrimary>
     </div>
   )
 }
