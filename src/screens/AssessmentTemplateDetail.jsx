@@ -97,7 +97,7 @@ export default function AssessmentTemplateDetail() {
           href={pdfPath}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--v4-ink)] text-white text-[12.5px] font-semibold hover:bg-black"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[var(--v4-ink)] text-white text-[12.5px] font-semibold hover:bg-[#0d0a08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2"
         >
           <ExternalLink className="w-3.5 h-3.5" /> Open {custom ? 'Custom' : 'Default'} PDF
         </a>

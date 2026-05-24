@@ -184,7 +184,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     {expectedPct > 0 && (
-                      <div className="absolute top-0 h-2 w-0.5 bg-black opacity-30" style={{ left: `${expectedPct}%` }} />
+                      <div className="absolute top-0 h-2 w-0.5 bg-[var(--v4-ink)] opacity-30" style={{ left: `${expectedPct}%` }} />
                     )}
                   </div>
                 </div>

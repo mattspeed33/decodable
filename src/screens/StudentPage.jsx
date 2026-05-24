@@ -13,7 +13,7 @@ import { useAsync } from '../lib/useAsync'
 import { GRADE_LEVELS, getStatus } from '../lib/gradeLevels'
 import {
   Section, SectionHead, ListTable, ListRow, EmptyRow, HighlightCard,
-  BtnPrimary, BtnSecondary,
+  BtnPrimary, BtnSecondary, CloseBtn,
 } from '../components/v4/primitives.jsx'
 
 import ProfileTab from './tabs/ProfileTab.jsx'
@@ -702,14 +702,14 @@ function EditModal({ studentId, onClose }) {
   // session, schedule, parent). It enters edit mode on its own "Edit" button
   // click; here we just open it inside a modal shell.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--v4-ink)]/50 p-6" onClick={onClose}>
       <div
-        className="bg-[var(--v4-surface)] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl"
+        className="bg-[var(--v4-surface)] rounded-[10px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[var(--v4-ink)]">Edit Student</h2>
-          <button onClick={onClose} className="text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] text-xl leading-none">×</button>
+          <h2 className="text-[15px] font-bold text-[var(--v4-ink)]">Edit Student</h2>
+          <CloseBtn onClick={onClose} label="Close edit dialog" />
         </div>
         <ProfileTab studentId={studentId} onRefresh={onClose} defaultEditing />
       </div>
