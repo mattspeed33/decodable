@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import { getStudents, getAllSessions, getScheduledSessions, getAllAnalyses } from '../lib/storage'
 import { useAsync } from '../lib/useAsync'
-import { Card } from '../components/v4/primitives.jsx'
+import { Card, IconBtn } from '../components/v4/primitives.jsx'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DAY_NAME_TO_NUM = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 }
@@ -149,13 +149,13 @@ export default function CalendarPage() {
 
       <Card padding="p-4">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={prevMonth} className="w-7 h-7 rounded-md text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] flex items-center justify-center">
+          <IconBtn onClick={prevMonth} title="Previous month">
             <ChevronLeft className="w-4 h-4" />
-          </button>
+          </IconBtn>
           <span className="text-[14px] font-semibold text-[var(--v4-ink)]">{monthLabel}</span>
-          <button onClick={nextMonth} className="w-7 h-7 rounded-md text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)] flex items-center justify-center">
+          <IconBtn onClick={nextMonth} title="Next month">
             <ChevronRight className="w-4 h-4" />
-          </button>
+          </IconBtn>
         </div>
 
         <div className="grid grid-cols-7 gap-1 mb-1">

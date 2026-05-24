@@ -1,30 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #a78bfa;
-  --primary-hover: #8b6fdd;
-  --primary-light: #ede9fe;
-  --green: #58cc02;
-  --green-light: #d7ffb8;
-  --orange: #ff9600;
-  --orange-light: #fff3e0;
-  --red: #ff4b4b;
-  --red-light: #ffe0e0;
-  --blue: #1cb0f6;
-  --blue-light: #ddf4ff;
-  --gold: #ffc800;
-  --gold-light: #fff8e1;
-  --bg: #f7f7f5;
-  --card: #ffffff;
-
-  /* V4 design palette (used on the new student view) */
+  /* V4 design palette — single source of truth. See DESIGN.md. */
   --v4-bg: #f5f3ef;
   --v4-surface: #ffffff;
   --v4-surface-2: #faf9f6;
   --v4-surface-3: #f0eee9;
   --v4-ink: #1a1a1a;
   --v4-ink-2: #4a4a4a;
-  --v4-ink-3: #9a9a9a;
+  --v4-ink-3: #6c6a64;
   --v4-ink-4: #d4d4cf;
   --v4-border: #e8e6e0;
   --v4-border-2: #d4d4cf;

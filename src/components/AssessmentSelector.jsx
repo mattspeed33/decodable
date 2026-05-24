@@ -1,6 +1,6 @@
-import { Check, Sparkles, X } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { SKILLS_CATEGORIES } from '../lib/skillsCategories'
-import { BtnPrimary } from './v4/primitives.jsx'
+import { BtnPrimary, CloseBtn } from './v4/primitives.jsx'
 
 const ICONS = {
   'intake-snapshot': '📸', 'phonological-awareness': '👂', 'alphabet-knowledge': '🔤',
@@ -25,9 +25,7 @@ export default function AssessmentSelector({ assessments, selected, setSelected,
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Select Student Work for Analysis</h3>
-        <button onClick={onCancel} className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]" title="Cancel">
-          <X className="w-4 h-4" />
-        </button>
+        <CloseBtn onClick={onCancel} label="Cancel selection" />
       </div>
 
       <div className="flex items-center gap-3 text-[11.5px]">

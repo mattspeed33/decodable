@@ -1,5 +1,6 @@
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { SKILLS_CATEGORIES } from '../lib/skillsCategories'
+import { CloseBtn } from './v4/primitives.jsx'
 
 const ICONS = {
   'intake-snapshot': '📸',
@@ -35,9 +36,7 @@ export default function CategoryPicker({ onSelect, onCancel }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">Choose Assessment Type</h3>
-        <button onClick={onCancel} className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]" title="Cancel">
-          <X className="w-4 h-4" />
-        </button>
+        <CloseBtn onClick={onCancel} label="Cancel category picker" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

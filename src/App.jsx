@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { SignedIn, SignedOut, SignIn } from '@clerk/clerk-react'
+import { Check } from 'lucide-react'
 import { runMigration } from './lib/migration'
 import { maybeMigrateOnce } from './lib/firstRunMigration'
 
@@ -38,8 +39,8 @@ function MigrationGate({ children }) {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <p className="text-sm text-gray-400 font-bold">Preparing your account…</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--v4-bg)]">
+        <p className="text-[13px] font-medium text-[var(--v4-ink-3)]">Preparing your account…</p>
       </div>
     )
   }
@@ -55,13 +56,20 @@ function MigrationGate({ children }) {
 function ImportBanner({ counts, onDismiss }) {
   const lines = Object.entries(counts).map(([slug, n]) => `${n} ${slug.replace('-', ' ')}`).join(' · ')
   return (
-    <div className="fixed top-4 right-4 left-60 z-50 bg-[var(--green-light)] border-2 border-green-200 rounded-2xl p-4 flex items-center gap-3 shadow-md">
-      <span className="text-2xl">✨</span>
-      <div className="flex-1">
-        <p className="text-sm font-black text-[var(--green)]">Imported your existing data</p>
-        <p className="text-xs text-gray-600">{lines}</p>
+    <div className="fixed top-4 right-4 left-[236px] z-50 bg-[var(--v4-surface)] border border-[var(--v4-border)] rounded-[10px] p-4 flex items-center gap-3">
+      <div className="w-8 h-8 rounded-md bg-[var(--v4-green-lt)] text-[var(--v4-green)] flex items-center justify-center shrink-0">
+        <Check className="w-4 h-4" />
       </div>
-      <button onClick={onDismiss} className="text-xs font-bold text-gray-400 hover:text-black">Dismiss</button>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-[var(--v4-ink)]">Imported your existing data</p>
+        <p className="text-[11.5px] text-[var(--v4-ink-3)] truncate">{lines}</p>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="text-[11.5px] font-medium text-[var(--v4-ink-3)] hover:text-[var(--v4-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 rounded-sm px-1"
+      >
+        Dismiss
+      </button>
     </div>
   )
 }
@@ -83,7 +91,7 @@ export default function App() {
   return (
     <>
       <SignedOut>
-        <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--v4-bg)] p-6">
           <SignIn routing="hash" />
         </div>
       </SignedOut>

@@ -1,6 +1,7 @@
 // Shared V4 design primitives. Pulled out so Dashboard, Students, StudentPage,
 // and the rest of the screens render with the same cards / sections / rows.
 // All colors come from the --v4-* CSS variables in index.css.
+import { X } from 'lucide-react'
 
 const TONE_CLASSES = {
   purple: 'bg-[var(--v4-purple-lt)] text-[var(--v4-purple)]',
@@ -124,6 +125,34 @@ export function BtnSecondary({ children, onClick, className = '', ...rest }) {
     >
       {children}
     </button>
+  )
+}
+
+// IconBtn: small icon-only button (32x32). title becomes aria-label by default.
+// Used for inline edit/delete in list rows, close buttons in modals/forms, and
+// generic icon-only controls. Inherits the system focus-visible pattern.
+export function IconBtn({ children, onClick, title, ariaLabel, danger, className = '', ...rest }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={ariaLabel ?? title}
+      className={`w-8 h-8 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:outline-offset-2 ${danger ? 'hover:text-[var(--v4-red)]' : 'hover:text-[var(--v4-ink)]'} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  )
+}
+
+// Convenience wrapper for the close-X button pattern, which appears in every
+// modal and form header. Default size matches IconBtn (32x32). Aria-label
+// required (caller supplies the context: "Close", "Cancel upload", etc.).
+export function CloseBtn({ onClick, label = 'Close', ...rest }) {
+  return (
+    <IconBtn onClick={onClick} title={label} ariaLabel={label} {...rest}>
+      <X className="w-4 h-4" />
+    </IconBtn>
   )
 }
 

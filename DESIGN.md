@@ -4,7 +4,7 @@ description: A literacy-tutoring workspace for tutors. The Tutor's Notebook in s
 colors:
   ink: "#1a1a1a"
   ink-2: "#4a4a4a"
-  ink-3: "#9a9a9a"
+  ink-3: "#6c6a64"
   ink-4: "#d4d4cf"
   paper-bg: "#f5f3ef"
   paper-surface: "#ffffff"
@@ -144,7 +144,7 @@ The palette is one strong ink, a warm-cream paper ladder, and a small set of rol
 - **Paper Surface 2** (`#faf9f6`): row hover, the nav rail, alternate surface for layered context. A whisper warmer than pure white.
 - **Paper Surface 3** (`#f0eee9`): tag backgrounds, deeper ground for muted state. Where the page would be slightly more compressed.
 - **Ink 2** (`#4a4a4a`): secondary body text, subdued button labels.
-- **Ink 3** (`#9a9a9a`): tertiary text, eyebrow labels, subdued icons.
+- **Ink 3** (`#6c6a64`): tertiary text, eyebrow labels, subdued icons. Tuned to WCAG AA contrast on `paper-surface` (≈5.0:1); previously `#9a9a9a` which failed AA at body sizes.
 - **Ink 4** (`#d4d4cf`): faintest UI text, inactive dots, disabled states.
 - **Rule Line** (`#e8e6e0`): default borders. The grain of the paper.
 - **Rule Line Strong** (`#d4d4cf`): hover borders, decisive separators.

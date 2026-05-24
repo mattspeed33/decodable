@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { X, Save, ExternalLink, Download, Printer } from 'lucide-react'
+import { Save, ExternalLink, Download, Printer } from 'lucide-react'
 import { FORM_SCHEMAS, getEmptyFormData } from '../lib/assessmentFormSchemas'
 import { getDefaultPdfPath } from '../lib/skillsCategories'
 import PhotoUploader from './PhotoUploader.jsx'
-import { BtnPrimary, BtnSecondary, Card } from './v4/primitives.jsx'
+import { BtnPrimary, BtnSecondary, Card, CloseBtn } from './v4/primitives.jsx'
 
 const INPUT = 'w-full border border-[var(--v4-border)] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)]'
 const INPUT_SMALL = 'border border-[var(--v4-border)] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[var(--v4-ink)] bg-[var(--v4-surface)]'
@@ -308,9 +308,7 @@ export default function AssessmentForm({ categoryId, initialData, photos: initia
           <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">{schema.label}</h3>
           {schema.subtitle && <p className="text-[11.5px] text-[var(--v4-ink-3)]">{schema.subtitle}</p>}
         </div>
-        <button onClick={onCancel} className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--v4-ink-3)] hover:bg-[var(--v4-surface-3)] hover:text-[var(--v4-ink)]" title="Cancel">
-          <X className="w-4 h-4" />
-        </button>
+        <CloseBtn onClick={onCancel} label="Cancel assessment" />
       </div>
 
       {/* Mode toggle */}
