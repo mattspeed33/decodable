@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Sparkles, FileText, PencilLine, Target, ChevronDown, Printer, ArrowLeft } from 'lucide-react'
+import { Plus, Sparkles, FileText, PencilLine, Target, ChevronDown, Printer, ArrowLeft, Flame, Ear, Type, BookOpen, CheckCircle, AlertTriangle } from 'lucide-react'
 import { getStudent, getLatestAssessment, getLatestAnalysis, getLatestSession, getSessions, getAssessments, saveSession, saveAnalysis } from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
 import { runPrompt, compressImage } from '../../lib/claude'
@@ -23,13 +23,26 @@ function relativeDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
 }
 
-const blockBorder = {
-  'warm-up': 'border-l-[var(--v4-amber)]',
-  'phonemic_awareness': 'border-l-[var(--v4-blue)]',
-  'phonics_instruction': 'border-l-[var(--v4-purple)]',
-  'connected_reading': 'border-l-[var(--v4-green)]',
-  'encoding_spelling': 'border-l-purple-400',
-  'confidence_close': 'border-l-pink-400',
+// Each block type gets a small lucide icon in a tinted tile (matches the
+// ListRow pattern). The wrap-up block ('confidence_close') uses neutral
+// gray to distinguish it from instructional blocks without inventing a
+// 6th brand tone.
+const BLOCK_META = {
+  'warm-up':             { Icon: Flame,       tone: 'amber'  },
+  'phonemic_awareness':  { Icon: Ear,         tone: 'blue'   },
+  'phonics_instruction': { Icon: Type,        tone: 'purple' },
+  'connected_reading':   { Icon: BookOpen,    tone: 'green'  },
+  'encoding_spelling':   { Icon: PencilLine,  tone: 'teal'   },
+  'confidence_close':    { Icon: CheckCircle, tone: 'gray'   },
+}
+
+const BLOCK_TILE = {
+  amber:  'bg-[var(--v4-amber-lt)]  text-[var(--v4-amber)]',
+  blue:   'bg-[var(--v4-blue-lt)]   text-[var(--v4-blue)]',
+  purple: 'bg-[var(--v4-purple-lt)] text-[var(--v4-purple)]',
+  green:  'bg-[var(--v4-green-lt)]  text-[var(--v4-green)]',
+  teal:   'bg-[var(--v4-teal-lt)]   text-[var(--v4-teal)]',
+  gray:   'bg-[var(--v4-surface-3)] text-[var(--v4-ink-2)]',
 }
 
 function QuickStartForm({ student, onGenerate }) {
@@ -162,26 +175,32 @@ export default function SessionsTab({ studentId, onRefresh }) {
   }
 
   async function handleSavePlan() {
-    const sesNum = (lastSession?.ses_number || 0)
-    await saveSession({
-      id: crypto.randomUUID(),
-      student_id: studentId,
-      assessment_id: assessment?.id,
-      date: new Date().toISOString().split('T')[0],
-      ses_number: sesNum + 1,
-      length_minutes: sessionLength,
-      ufli_unit_covered: plan?.ufli_focus_unit || null,
-      tutor_notes: planNotes.tutor_notes,
-      what_went_well: planNotes.what_went_well,
-      what_needs_more_work: planNotes.what_needs_more_work,
-      homework_assigned: false, parent_email_sent: false,
-      created_at: new Date().toISOString(),
-    })
-    setPlan(null)
-    setMode(null)
-    setPlanNotes({ tutor_notes: '', what_went_well: '', what_needs_more_work: '' })
-    refreshSessions()
-    onRefresh?.()
+    setError(null)
+    try {
+      const sesNum = (lastSession?.ses_number || 0)
+      await saveSession({
+        id: crypto.randomUUID(),
+        student_id: studentId,
+        assessment_id: assessment?.id,
+        date: new Date().toISOString().split('T')[0],
+        ses_number: sesNum + 1,
+        length_minutes: sessionLength,
+        ufli_unit_covered: plan?.ufli_focus_unit || null,
+        tutor_notes: planNotes.tutor_notes,
+        what_went_well: planNotes.what_went_well,
+        what_needs_more_work: planNotes.what_needs_more_work,
+        homework_assigned: false, parent_email_sent: false,
+        created_at: new Date().toISOString(),
+      })
+      setPlan(null)
+      setMode(null)
+      setPlanNotes({ tutor_notes: '', what_went_well: '', what_needs_more_work: '' })
+      refreshSessions()
+      onRefresh?.()
+    } catch (err) {
+      // Keep plan and planNotes intact so the tutor can retry without re-typing.
+      setError(err?.message || 'Could not save the session. Check your connection and try again.')
+    }
   }
 
   async function handleLogSession() {
@@ -324,9 +343,9 @@ Previous sessions completed: ${allSessions.length}
           )}
           <div className="grid grid-cols-2 gap-3">
             {analysis.ufli_placement && (
-              <div className="bg-[var(--v4-purple-lt)] rounded-md p-3">
-                <p className="text-[10.5px] font-semibold text-[var(--v4-purple)] uppercase tracking-[0.6px]">UFLI Unit</p>
-                <p className="text-[16px] font-bold text-[var(--v4-purple)]">{analysis.ufli_placement.current_working_unit}</p>
+              <div className="bg-[var(--v4-surface-2)] rounded-md p-3">
+                <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">UFLI Unit</p>
+                <p className="text-[16px] font-bold text-[var(--v4-ink)]">{analysis.ufli_placement.current_working_unit}</p>
                 <p className="text-[10.5px] text-[var(--v4-ink-3)]">{analysis.ufli_placement.current_unit_name}</p>
               </div>
             )}
@@ -376,35 +395,53 @@ Previous sessions completed: ${allSessions.length}
         <div className="space-y-4">
           <ModeHeader title="Session Plan" onBack={() => { setPlan(null); setMode(null) }} />
 
-          <div className="bg-[var(--v4-purple-lt)] rounded-md p-4 border border-[var(--v4-purple-lt)]">
-            <p className="text-[13.5px] font-semibold text-[var(--v4-purple)]"><Target className="w-3.5 h-3.5 inline mr-1.5" />{plan.session_goal}</p>
-            <span className="text-[10.5px] bg-white text-[var(--v4-purple)] px-1.5 py-0.5 rounded font-semibold mt-2 inline-block">
+          <div className="border border-[var(--v4-border)] rounded-[10px] p-4 bg-[var(--v4-surface)] space-y-2">
+            <div className="flex items-start gap-2.5">
+              <Target className="w-4 h-4 text-[var(--v4-purple)] mt-0.5 shrink-0" />
+              <p className="text-[14px] font-semibold text-[var(--v4-ink)]">{plan.session_goal}</p>
+            </div>
+            <span className="text-[10.5px] bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] px-1.5 py-0.5 rounded font-semibold inline-block ml-[26px]">
               Unit {plan.ufli_focus_unit} — {plan.ufli_focus_unit_name}
             </span>
           </div>
 
           <div className="space-y-2">
-            {plan.blocks.map((block, i) => (
-              <Card key={i} padding="p-3" className={`border-l-4 ${blockBorder[block.type] || 'border-l-[var(--v4-ink-4)]'}`}>
-                <div className="flex justify-between items-start mb-1">
-                  <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{block.name}</p>
-                  <span className="text-[10.5px] text-[var(--v4-ink-3)] font-semibold bg-[var(--v4-surface-3)] px-1.5 py-0.5 rounded">{block.time_start}–{block.time_end}</span>
-                </div>
-                <ul className="space-y-0.5 mb-1">
-                  {(Array.isArray(block.what_to_do) ? block.what_to_do : [block.what_to_do]).map((step, j) => (
-                    <li key={j} className="text-[12.5px] text-[var(--v4-ink-2)] flex gap-1.5"><span className="text-[var(--v4-ink-4)]">•</span>{step}</li>
-                  ))}
-                </ul>
-                {block.example_words_or_prompts?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {block.example_words_or_prompts.map((w, j) => (
-                      <span key={j} className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">{w}</span>
-                    ))}
+            {plan.blocks.map((block, i) => {
+              const meta = BLOCK_META[block.type] || { Icon: BookOpen, tone: 'gray' }
+              const Icon = meta.Icon
+              return (
+                <Card key={i} padding="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${BLOCK_TILE[meta.tone]}`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <p className="text-[13px] font-semibold text-[var(--v4-ink)]">{block.name}</p>
+                        <span className="text-[10.5px] text-[var(--v4-ink-3)] font-semibold bg-[var(--v4-surface-3)] px-1.5 py-0.5 rounded shrink-0">{block.time_start}–{block.time_end}</span>
+                      </div>
+                      <ul className="space-y-0.5 mb-1">
+                        {(Array.isArray(block.what_to_do) ? block.what_to_do : [block.what_to_do]).map((step, j) => (
+                          <li key={j} className="text-[12.5px] text-[var(--v4-ink-2)] flex gap-1.5"><span className="text-[var(--v4-ink-4)]">•</span>{step}</li>
+                        ))}
+                      </ul>
+                      {block.example_words_or_prompts?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {block.example_words_or_prompts.map((w, j) => (
+                            <span key={j} className="text-[10.5px] bg-[var(--v4-blue-lt)] text-[var(--v4-blue)] px-1.5 py-0.5 rounded font-semibold">{w}</span>
+                          ))}
+                        </div>
+                      )}
+                      {block.watch_for && (
+                        <p className="text-[11.5px] text-[var(--v4-amber)] mt-1 font-semibold flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3 shrink-0" /> {block.watch_for}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                )}
-                {block.watch_for && <p className="text-[11.5px] text-[var(--v4-amber)] mt-1 font-semibold">⚠ {block.watch_for}</p>}
-              </Card>
-            ))}
+                </Card>
+              )
+            })}
           </div>
 
           {plan.prep_checklist?.length > 0 && (
@@ -421,9 +458,14 @@ Previous sessions completed: ${allSessions.length}
           )}
 
           {plan.tutor_reminder && (
-            <div className="bg-[var(--v4-amber-lt)] rounded-md p-3 border border-[var(--v4-amber-lt)]">
-              <p className="text-[10.5px] font-semibold text-[var(--v4-amber)] uppercase tracking-[0.6px]">Reminder</p>
-              <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{plan.tutor_reminder}</p>
+            <div className="border border-[var(--v4-border)] rounded-[10px] p-3 bg-[var(--v4-surface)]">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-[var(--v4-amber)] mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[10.5px] font-semibold text-[var(--v4-ink-3)] uppercase tracking-[0.6px]">Reminder</p>
+                  <p className="text-[12.5px] text-[var(--v4-ink-2)] mt-0.5">{plan.tutor_reminder}</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -445,6 +487,7 @@ Previous sessions completed: ${allSessions.length}
             </div>
           </Card>
 
+          {error && <Banner tone="red">{error}</Banner>}
           <div className="flex items-center gap-2">
             <BtnSecondary onClick={() => window.print()}><Printer className="w-3.5 h-3.5" /> Print</BtnSecondary>
             <BtnPrimary onClick={handleSavePlan} className="ml-auto">Save Session</BtnPrimary>
