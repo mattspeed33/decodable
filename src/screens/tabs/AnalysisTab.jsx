@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Brain, ChevronDown } from 'lucide-react'
+import { Brain, ChevronDown, Check } from 'lucide-react'
 import { getAnalyses } from '../../lib/storage'
 import { useAsync } from '../../lib/useAsync'
 
@@ -28,8 +28,7 @@ export default function AnalysisTab({ studentId }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--v4-ink)]">AI Analysis</h3>
+      <div className="flex items-center justify-end gap-2">
         <span className="text-[11.5px] text-[var(--v4-ink-3)]">{analyses.length} run{analyses.length !== 1 ? 's' : ''}</span>
       </div>
 
@@ -41,7 +40,8 @@ export default function AnalysisTab({ studentId }) {
             <div key={analysis.id} className={i === analyses.length - 1 ? '' : 'border-b border-[var(--v4-border)]'}>
               <button
                 onClick={() => setExpandedId(expanded ? null : analysis.id)}
-                className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-[var(--v4-surface-2)] transition-colors"
+                aria-expanded={expanded}
+                className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-[var(--v4-surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--v4-ink)] focus-visible:-outline-offset-2 transition-colors"
               >
                 <div className="w-8 h-8 rounded-md bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] flex items-center justify-center shrink-0">
                   <Brain className="w-4 h-4" />
@@ -57,13 +57,7 @@ export default function AnalysisTab({ studentId }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {a?.fluency_estimate_pct != null && (
-                    <span
-                      className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded"
-                      style={{
-                        background: a.fluency_estimate_pct >= 80 ? 'var(--v4-green-lt)' : a.fluency_estimate_pct >= 50 ? 'var(--v4-amber-lt)' : 'var(--v4-red-lt)',
-                        color:      a.fluency_estimate_pct >= 80 ? 'var(--v4-green)'    : a.fluency_estimate_pct >= 50 ? 'var(--v4-amber)'    : 'var(--v4-red)',
-                      }}
-                    >
+                    <span className={`text-[10.5px] font-semibold px-1.5 py-0.5 rounded ${fluencyChipClass(a.fluency_estimate_pct)}`}>
                       {a.fluency_estimate_pct}%
                     </span>
                   )}
@@ -88,6 +82,12 @@ export default function AnalysisTab({ studentId }) {
   )
 }
 
+function fluencyChipClass(pct) {
+  if (pct >= 80) return 'bg-[var(--v4-green-lt)] text-[var(--v4-green)]'
+  if (pct >= 50) return 'bg-[var(--v4-amber-lt)] text-[var(--v4-amber)]'
+  return 'bg-[var(--v4-red-lt)] text-[var(--v4-red)]'
+}
+
 function AnalysisDetail({ a }) {
   return (
     <div className="px-4 py-4 bg-[var(--v4-surface-2)] border-t border-[var(--v4-border)] space-y-4">
@@ -95,8 +95,8 @@ function AnalysisDetail({ a }) {
         <DetailBlock title="Strengths" tone="green">
           <ul className="space-y-1">
             {a.strengths.map((s, i) => (
-              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
-                <span className="text-[var(--v4-green)]">✓</span>
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5 items-start">
+                <Check className="w-3.5 h-3.5 text-[var(--v4-green)] mt-0.5 shrink-0" />
                 {s}
               </li>
             ))}
@@ -108,9 +108,9 @@ function AnalysisDetail({ a }) {
         <DetailBlock title="Focus Areas" tone="red">
           <ul className="space-y-1.5">
             {a.priority_gaps.map((g, i) => (
-              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
-                <span className="bg-white text-[var(--v4-red)] text-[10.5px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0">{g.rank}</span>
-                <span><span className="font-semibold text-[var(--v4-ink)]">{g.gap}</span> — <span className="text-[var(--v4-ink-3)]">{g.why_it_matters}</span></span>
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5 items-start">
+                <span className="bg-[var(--v4-red-lt)] text-[var(--v4-red)] text-[10.5px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5">{g.rank}</span>
+                <span><span className="font-semibold text-[var(--v4-ink)]">{g.gap}:</span> <span className="text-[var(--v4-ink-3)]">{g.why_it_matters}</span></span>
               </li>
             ))}
           </ul>
@@ -121,8 +121,8 @@ function AnalysisDetail({ a }) {
         <DetailBlock title="Watch" tone="amber">
           <ul className="space-y-1">
             {a.patterns_to_watch.map((p, i) => (
-              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5">
-                <span className="text-[var(--v4-amber)]">●</span>
+              <li key={i} className="text-[13px] text-[var(--v4-ink-2)] flex gap-1.5 items-start">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--v4-amber)] mt-2 shrink-0" />
                 {p}
               </li>
             ))}
@@ -133,7 +133,7 @@ function AnalysisDetail({ a }) {
       {a.ufli_placement && (
         <div className="grid grid-cols-3 gap-2">
           <UfliCell title="Mastered" unit={a.ufli_placement.last_unit_mastered} name={a.ufli_placement.last_unit_name} />
-          <UfliCell title="Working on" unit={a.ufli_placement.current_working_unit} name={a.ufli_placement.current_unit_name} highlight />
+          <UfliCell title="Working on" unit={a.ufli_placement.current_working_unit} name={a.ufli_placement.current_unit_name} current />
           <UfliCell title="Next up" unit={a.ufli_placement.next_unlock_unit} name={a.ufli_placement.next_unlock_name} />
         </div>
       )}
@@ -144,14 +144,14 @@ function AnalysisDetail({ a }) {
             {(a.week_arc || a.four_week_arc).map((week, i) => (
               <li key={i} className="text-[13px] flex gap-1.5 items-start">
                 <span className="bg-[var(--v4-purple-lt)] text-[var(--v4-purple)] text-[10.5px] font-bold w-5 h-5 rounded flex items-center justify-center shrink-0">{week.week}</span>
-                <span><span className="font-semibold text-[var(--v4-ink)]">{week.focus}</span> <span className="text-[var(--v4-ink-3)]">— {week.activity_type}</span></span>
+                <span><span className="font-semibold text-[var(--v4-ink)]">{week.focus}:</span> <span className="text-[var(--v4-ink-3)]">{week.activity_type}</span></span>
               </li>
             ))}
           </ul>
         </DetailBlock>
       )}
 
-      <details className="border border-[var(--v4-border)] rounded-md bg-white">
+      <details className="border border-[var(--v4-border)] rounded-md bg-[var(--v4-surface)]">
         <summary className="px-3 py-2 text-[11.5px] font-semibold text-[var(--v4-ink-3)] cursor-pointer uppercase tracking-[0.6px]">Detailed breakdown</summary>
         <div className="px-3 pb-3 pt-2 border-t border-[var(--v4-border)] space-y-3">
           {a.scarboroughs_rope && (
@@ -192,28 +192,28 @@ function AnalysisDetail({ a }) {
   )
 }
 
-const TONE = {
-  green: { bg: 'bg-[var(--v4-green-lt)]', label: 'text-[var(--v4-green)]' },
-  red:   { bg: 'bg-[var(--v4-red-lt)]',   label: 'text-[var(--v4-red)]' },
-  amber: { bg: 'bg-[var(--v4-amber-lt)]', label: 'text-[var(--v4-amber)]' },
+const EYEBROW_TONE = {
+  green: 'text-[var(--v4-green)]',
+  red:   'text-[var(--v4-red)]',
+  amber: 'text-[var(--v4-amber)]',
 }
 
 function DetailBlock({ title, tone, children }) {
-  const t = TONE[tone]
+  const labelColor = EYEBROW_TONE[tone] || 'text-[var(--v4-ink-3)]'
   return (
-    <div className={t ? `rounded-md p-3 ${t.bg}` : ''}>
-      <p className={`text-[10.5px] font-semibold uppercase tracking-[0.6px] mb-1.5 ${t ? t.label : 'text-[var(--v4-ink-3)]'}`}>{title}</p>
+    <div>
+      <p className={`text-[10.5px] font-semibold uppercase tracking-[0.6px] mb-1.5 ${labelColor}`}>{title}</p>
       {children}
     </div>
   )
 }
 
-function UfliCell({ title, unit, name, highlight }) {
+function UfliCell({ title, unit, name, current }) {
   return (
-    <div className={`rounded-md p-2.5 text-center ${highlight ? 'bg-[var(--v4-purple-lt)]' : 'bg-white border border-[var(--v4-border)]'}`}>
-      <p className={`text-[10px] uppercase font-semibold tracking-[0.6px] ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink-3)]'}`}>{title}</p>
-      <p className={`text-[18px] font-bold mt-0.5 ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink)]'}`}>{unit}</p>
-      <p className={`text-[10px] mt-0.5 ${highlight ? 'text-[var(--v4-purple)]' : 'text-[var(--v4-ink-3)]'}`}>{name}</p>
+    <div className={`rounded-md p-2.5 text-center border ${current ? 'border-[var(--v4-ink)]' : 'border-[var(--v4-border)]'} bg-[var(--v4-surface)]`}>
+      <p className="text-[10px] uppercase font-semibold tracking-[0.6px] text-[var(--v4-ink-3)]">{title}</p>
+      <p className="text-[18px] font-bold mt-0.5 text-[var(--v4-ink)]">{unit}</p>
+      <p className="text-[10px] mt-0.5 text-[var(--v4-ink-3)]">{name}</p>
     </div>
   )
 }
